@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/RodrigoMvs123/agent-load-protocol/main/schema/agent.alp.schema.json",
+  "title": "Agent Load Protocol - Agent Card",
+  "description": "Schema for a portable ALP Agent Card (agent.alp.json)",
+  "type": "object",
+  "required": ["alp_version", "id", "name", "persona", "llm", "server"],
+  "properties": {
+    "alp_version": {
+      "type": "string",
+      "description": "ALP spec version this card targets.",
+      "example": "0.1.0"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique slug identifier for this agent.",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable agent name."
+    },
+    "description": {
+      "type": "string",
+      "description": "Short description of what this agent does."
+    },
+    "persona": {
+      "type": "string",
+      "description": "System prompt / identity. This is what the agent 'is'."
+    },
+    "llm": {
+      "type": "object",
+      "description": "LLM preference. The client resolves the actual model.",
+      "required": ["provider"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["any", "openai", "anthropic", "google", "mistral", "ollama"],
+          "description": "Preferred LLM provider. 'any' means no preference."
+        },
+        "model": {
+          "type": "string",
+          "description": "Preferred model name. Optional.",
+          "example": "gpt-4o"
+        }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "description": "List of tools this agent exposes.",
+      "items": {
+        "type": "object",
+        "required": ["name", "description", "endpoint"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Tool identifier."
+          },
+          "description": {
+            "type": "string",
+            "description": "What this tool does."
+          },
+          "endpoint": {
+            "type": "string",
+            "description": "Path on the ALP server. e.g. /tools/search"
+          },
+          "input_schema": {
+            "type": "object",
+            "description": "JSON schema for the tool's input."
+          }
+        }
+      }
+    },
+    "memory": {
+      "type": "object",
+      "description": "Memory configuration.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "backend": {
+          "type": "string",
+          "description": "Memory backend identifier.",
+          "example": "redis"
+        }
+      }
+    },
+    "server": {
+      "type": "object",
+      "description": "Where this agent's ALP server lives.",
+      "required": ["url", "transport"],
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Base URL of the ALP server."
+        },
+        "transport": {
+          "type": "string",
+          "enum": ["http", "sse"],
+          "description": "Transport protocol."
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional metadata.",
+      "properties": {
+        "author": { "type": "string" },
+        "version": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "repository": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    }
+  }
+}

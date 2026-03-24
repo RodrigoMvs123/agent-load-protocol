@@ -1,0 +1,57 @@
+{
+  "$schema": "https://raw.githubusercontent.com/RodrigoMvs123/agent-load-protocol/main/schema/agent.alp.schema.json",
+  "alp_version": "0.1.0",
+  "id": "hello-agent",
+  "name": "Hello Agent",
+  "description": "A minimal ALP-compatible agent. Clone this and replace the tools with your own.",
+  "persona": "You are a helpful assistant. You answer questions clearly and concisely. When asked to use a tool, you use it and report the result.",
+  "llm": {
+    "provider": "any",
+    "model": "user-defined"
+  },
+  "tools": [
+    {
+      "name": "greet",
+      "description": "Greets a user by name.",
+      "endpoint": "/tools/greet",
+      "input_schema": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the person to greet."
+          }
+        }
+      }
+    },
+    {
+      "name": "echo",
+      "description": "Echoes back any message. Useful for testing the connection.",
+      "endpoint": "/tools/echo",
+      "input_schema": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The message to echo."
+          }
+        }
+      }
+    }
+  ],
+  "memory": {
+    "enabled": false
+  },
+  "server": {
+    "url": "http://localhost:8000",
+    "transport": "http"
+  },
+  "metadata": {
+    "author": "RodrigoMvs123",
+    "version": "0.1.0",
+    "tags": ["starter", "example", "alp"],
+    "repository": "https://github.com/RodrigoMvs123/alp-agent-starter"
+  }
+}
