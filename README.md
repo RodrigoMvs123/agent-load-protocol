@@ -40,7 +40,35 @@ Any runtime that speaks ALP can load any agent that ships an Agent Card.
 
 ## Quick Start
 
-### 1. Create your Agent Card
+### Option A — Fork the starter (recommended)
+
+The fastest way to build an ALP-compatible agent. Fork [alp-agent-starter](https://github.com/RodrigoMvs123/alp-agent-starter), edit `agent.alp.json` with your agent's identity and tools, and run it. The server validates your card against this repo's schema on every startup — if it's invalid, it won't start.
+
+```bash
+git clone https://github.com/YOUR-USERNAME/alp-agent-starter
+cd alp-agent-starter
+pip install -r requirements.txt
+cp .env.example .env   # add your API keys
+python server.py
+```
+
+You'll see:
+```
+🔍 Validating agent.alp.json against ALP schema...
+✅ agent.alp.json is valid ALP v0.1.0
+```
+
+Then connect to any MCP-compatible runtime by pointing it to `http://localhost:8000/mcp`.
+
+### Option B — Build from scratch
+
+1. Create an `agent.alp.json` that validates against the schema:
+
+```bash
+curl https://raw.githubusercontent.com/RodrigoMvs123/agent-load-protocol/main/schema/agent.alp.schema.json
+```
+
+Minimal valid card:
 
 ```json
 {
@@ -49,8 +77,6 @@ Any runtime that speaks ALP can load any agent that ships an Agent Card.
   "name": "My Agent",
   "persona": "You are a helpful assistant.",
   "llm": { "provider": "any" },
-  "tools": [],
-  "memory": { "enabled": false },
   "server": {
     "url": "https://your-server.com",
     "transport": "http"
@@ -58,28 +84,35 @@ Any runtime that speaks ALP can load any agent that ships an Agent Card.
 }
 ```
 
-### 2. Run the reference server
+2. Build a server that exposes `/agent`, `/tools`, `/tools/{name}`, and `/mcp`
 
-```bash
-git clone https://github.com/RodrigoMvs123/agent-load-protocol
-cd agent-load-protocol/reference/server/python
-pip install -r requirements.txt
-AGENT_CARD_PATH=../../examples/hello-agent/agent.alp.json python alp_server.py
+3. At startup, fetch and validate against the ALP schema — that's what makes it ALP-compliant:
+
+```python
+import httpx, jsonschema
+
+SCHEMA_URL = "https://raw.githubusercontent.com/RodrigoMvs123/agent-load-protocol/main/schema/agent.alp.schema.json"
+
+async def validate():
+    async with httpx.AsyncClient() as client:
+        schema = (await client.get(SCHEMA_URL)).json()
+    jsonschema.validate(your_agent_card, schema)
 ```
 
-### 3. Load into Claude Code
-
-In your `claude_desktop_config.json`:
+### 3. Load into any MCP runtime
 
 ```json
 {
   "mcpServers": {
     "my-agent": {
-      "url": "https://your-server.com/tools"
+      "type": "http",
+      "url": "http://localhost:8000/mcp"
     }
   }
 }
 ```
+
+Works with Kiro, Claude Code, Claude Desktop, Cursor, and any MCP-compatible client.
 
 ## Repository Structure
 
