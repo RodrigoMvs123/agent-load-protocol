@@ -1,0 +1,269 @@
+{
+  "alp_version": "0.2.2",
+  "id": "vibe-coding-agent",
+  "name": "Vibe Coding Agent",
+  "description": "An expert GitHub API agent built on Relevance AI. Creates branches, searches code, drafts fixes, and opens pull requests autonomously from a natural language ticket description.",
+  "agent_type": "single",
+  "capabilities": [
+    "tool-use",
+    "code-execution",
+    "github-integration",
+    "knowledge-retrieval",
+    "triggered-execution",
+    "rag",
+    "alerting"
+  ],
+  "persona": "You are an expert in using the GitHub API. Use the GitHub API Call tool to make requests to the GitHub API. The repo path you are working in is {{repo_path}}. The main branch is called {{main_branch_name}}. Order of operations: fetch multiple file contents (get the SHA/head of the main branch first), search within file contents, create pull requests with changes. Rules: only ever try to make an API call a maximum of 5 times. Do not get stuck in a loop.",
+  "llm": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4"
+  },
+  "variables": {
+    "repo_path": {
+      "description": "The GitHub repo path the agent is working in. e.g. owner/repo-name",
+      "required": true
+    },
+    "main_branch_name": {
+      "description": "The name of the main branch in the repo.",
+      "required": true,
+      "default": "main"
+    },
+    "github_get_started": {
+      "description": "GitHub API getting started guide injected as context.",
+      "required": false
+    },
+    "secrets.chains_github_token": {
+      "description": "GitHub bearer token injected into tool steps via {{secrets.chains_github_token}}.",
+      "required": true
+    }
+  },
+  "tools": [
+    {
+      "name": "github_api_call",
+      "description": "Makes an authorized request to the GitHub API.",
+      "endpoint": "/tools/github_api_call",
+      "auth_ref": "github_bearer_token",
+      "input_schema": {
+        "type": "object",
+        "required": ["method", "path"],
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+          },
+          "path": {
+            "type": "string",
+            "description": "GitHub API path. e.g. /repos/owner/repo/contents/file.js"
+          },
+          "body": {
+            "type": "object",
+            "description": "Request body for POST/PUT/PATCH calls."
+          }
+        }
+      },
+      "steps": [
+        {
+          "type": "api_call",
+          "name": "call_github",
+          "description": "Executes the GitHub API request with the bearer token injected from secrets."
+        }
+      ],
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "integer" },
+          "body": { "type": "object" }
+        }
+      }
+    },
+    {
+      "name": "create_branch",
+      "description": "Creates a new branch in the GitHub repo from the current HEAD of the main branch.",
+      "endpoint": "/tools/create_branch",
+      "auth_ref": "github_bearer_token",
+      "input_schema": {
+        "type": "object",
+        "required": ["branch_name"],
+        "properties": {
+          "branch_name": { "type": "string" }
+        }
+      },
+      "steps": [
+        {
+          "type": "api_call",
+          "name": "get_main_sha",
+          "description": "GET /repos/{repo}/git/ref/heads/{main_branch} to retrieve the HEAD SHA."
+        },
+        {
+          "type": "api_call",
+          "name": "create_ref",
+          "description": "POST /repos/{repo}/git/refs to create the new branch from the SHA.",
+          "uses_output_of": "get_main_sha"
+        }
+      ],
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "branch_name": { "type": "string" },
+          "sha": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "create_or_update_file",
+      "description": "Creates or updates a file in the GitHub repo with Base64-encoded content.",
+      "endpoint": "/tools/create_or_update_file",
+      "auth_ref": "github_bearer_token",
+      "input_schema": {
+        "type": "object",
+        "required": ["path", "message", "content", "branch"],
+        "properties": {
+          "path": { "type": "string" },
+          "message": { "type": "string" },
+          "content": { "type": "string", "description": "Base64-encoded file content." },
+          "branch": { "type": "string" },
+          "sha": { "type": "string", "description": "Required when updating an existing file." }
+        }
+      },
+      "steps": [
+        {
+          "type": "code",
+          "name": "base64_encode",
+          "description": "Encodes the file content to Base64."
+        },
+        {
+          "type": "api_call",
+          "name": "put_file",
+          "description": "PUT /repos/{repo}/contents/{path} to create or update the file.",
+          "uses_output_of": "base64_encode"
+        }
+      ],
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "commit_sha": { "type": "string" },
+          "html_url": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "create_pull_request",
+      "description": "Opens a pull request from a feature branch into the main branch.",
+      "endpoint": "/tools/create_pull_request",
+      "auth_ref": "github_bearer_token",
+      "input_schema": {
+        "type": "object",
+        "required": ["title", "head", "base", "body"],
+        "properties": {
+          "title": { "type": "string" },
+          "head": { "type": "string" },
+          "base": { "type": "string" },
+          "body": { "type": "string" }
+        }
+      },
+      "steps": [
+        {
+          "type": "api_call",
+          "name": "post_pull_request",
+          "description": "POST /repos/{repo}/pulls to open the PR."
+        }
+      ],
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "pr_url": { "type": "string" },
+          "pr_number": { "type": "integer" }
+        }
+      }
+    },
+    {
+      "name": "draft_code",
+      "description": "Analyzes code to suggest improvements and fixes before committing.",
+      "endpoint": "/tools/draft_code",
+      "input_schema": {
+        "type": "object",
+        "required": ["code", "instruction"],
+        "properties": {
+          "code": { "type": "string" },
+          "instruction": { "type": "string" }
+        }
+      },
+      "steps": [
+        {
+          "type": "llm_prompt",
+          "name": "analyze_and_fix",
+          "description": "LLM prompt that analyzes the code and returns a corrected version with explanation."
+        }
+      ],
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "fixed_code": { "type": "string" },
+          "explanation": { "type": "string" }
+        }
+      }
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "github-api-docs",
+      "type": "document",
+      "description": "GitHub API getting started guide and reference. Injected as {{github_get_started}} variable.",
+      "retrieval_mode": "add_all_to_prompt"
+    }
+  ],
+  "triggers": [
+    {
+      "type": "manual",
+      "config": {}
+    },
+    {
+      "type": "webhook",
+      "config": {
+        "description": "Can be triggered by a Linear ticket webhook or CI event."
+      }
+    }
+  ],
+  "alerts": [
+    {
+      "trigger": "tool_failure",
+      "action": "notify",
+      "channel": "slack",
+      "auth_ref": "slack_webhook_url"
+    },
+    {
+      "trigger": "human_approval_required",
+      "action": "pause",
+      "channel": "email",
+      "auth_ref": "alert_email_address"
+    }
+  ],
+  "memory": {
+    "enabled": false
+  },
+  "observability": {
+    "websocket": false,
+    "logs_endpoint": "/logs"
+  },
+  "server": {
+    "url": "https://api-f1db6c.stack.tryrelevance.com/latest/agents/bcbe5a143fe01aec6849efbee5737d6d353733",
+    "transport": "http",
+    "region": "f1db6c"
+  },
+  "platform": {
+    "name": "relevance-ai",
+    "agent_id": "bcbe5a/143fe01a-ec68-49ef-bee5-737d6d353733/9ef03faa-a2d5-43a3-8191-a27c1f821112",
+    "export_url": "https://app.relevanceai.com/agents/bcbe5a/143fe01a-ec68-49ef-bee5-737d6d353733/edit/instructions"
+  },
+  "marketplace": {
+    "category": "developer-tools",
+    "tags": ["github", "code-review", "pull-request", "vibe-coding", "relevance-ai"],
+    "pricing_model": "per-run"
+  },
+  "metadata": {
+    "author": "RodrigoMvs123",
+    "version": "0.2.2",
+    "tags": ["relevance-ai", "github", "coding-agent", "alp"],
+    "repository": "https://github.com/RodrigoMvs123/agent-load-protocol"
+  }
+}
