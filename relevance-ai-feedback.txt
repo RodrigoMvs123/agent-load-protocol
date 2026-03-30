@@ -1,0 +1,66 @@
+RELEVANCE AI COMMUNITY FEEDBACK — Carl (AI Community Agent)
+============================================================
+
+SUMMARY
+-------
+Carl validated the MCP analogy and the core concept of ALP (agent card = identity + tools + memory + model prefs).
+He confirmed there is no official "export agent to a portable file" feature in Relevance AI today.
+
+
+CURRENT RELEVANCE AI BUILDING BLOCKS (closest to portability today)
+--------------------------------------------------------------------
+1. External invocation / interoperability
+   - Running an agent via HTTP or integrations
+   - Using MCP where it fits
+   - Other environments can call into a Relevance-hosted agent without a full export
+   - Does NOT require moving the agent out of Relevance AI
+
+2. Reusable configuration patterns
+   - Cloning agents
+   - Sharing templates / Marketplace-style assets
+   - Reusing tool setups
+   - Helps portability WITHIN the platform, but is NOT an external standard
+
+
+PRACTICAL PATH SUGGESTED (until/if native export exists)
+---------------------------------------------------------
+3. Define a mapping layer generated from what Relevance AI exposes:
+   - Agent prompt / persona
+   - Tool list + auth references
+   - Memory schema
+   - Model settings
+
+4. Treat secrets/credentials as non-exportable references
+   - Exported card should contain placeholders/IDs, NOT actual tokens
+
+
+OPEN QUESTIONS CARL WANTS ADDRESSED
+-------------------------------------
+5. What is the minimum viable ALP for useful portability?
+   - What is required? (e.g. persona + tool signatures + memory schema)
+   - What is optional?
+
+6. How is auth portability handled?
+   - Many tools rely on workspace-scoped OAuth / API keys
+   - Option A: a "bindings" file per runtime
+   - Option B: a standard secret reference mechanism
+   - Which approach does ALP take?
+
+
+ACTION ITEMS
+------------
+7. Share a concrete example agent.alp.json
+   - Should be for one real agent
+   - Secrets must be stripped out
+   - This would make the discussion much easier for the Relevance AI team
+
+8. Submit a formal feature request via Relevance AI support
+   - URL: https://relevanceai.com/docs/get-started/support
+   - Carl cannot commit to roadmap but flagged this as a solid request
+
+
+NOTES
+-----
+- Carl acknowledged he may be off on some product specifics
+- He cannot make roadmap commitments
+- The proposal was received positively as a "thoughtful" and "solid feature request"

@@ -1,0 +1,189 @@
+{
+  "alp_version": "0.2.2",
+  "id": "hive-business-process-agent",
+  "name": "Hive Business Process Agent",
+  "description": "A self-healing multi-agent swarm built with Hive. Automates business processes by spawning worker agents dynamically. Recovers from failures automatically via the Hive coding agent (queen).",
+  "agent_type": "swarm",
+  "capabilities": [
+    "human-in-the-loop",
+    "self-healing",
+    "parallel-execution",
+    "streaming",
+    "memory",
+    "tool-use",
+    "workforce-member",
+    "bulk-execution",
+    "alerting"
+  ],
+  "persona": "You are a business process automation agent. You break down complex goals into parallel tasks, assign them to worker agents, monitor execution, and recover from failures automatically. You ask for human input only when a decision requires it.",
+  "llm": {
+    "provider": "any",
+    "model": "user-defined"
+  },
+  "tools": [
+    {
+      "name": "run_process",
+      "description": "Starts a business process by goal description. The swarm spawns worker agents and returns a process ID.",
+      "endpoint": "/tools/run_process",
+      "input_schema": {
+        "type": "object",
+        "required": ["goal"],
+        "properties": {
+          "goal": {
+            "type": "string",
+            "description": "Natural language description of the business process to automate."
+          },
+          "budget_usd": {
+            "type": "number",
+            "description": "Optional cost cap in USD for this process run."
+          }
+        }
+      },
+      "steps": [
+        {
+          "type": "llm_prompt",
+          "name": "decompose_goal",
+          "description": "LLM decomposes the goal into a node graph of parallel tasks."
+        },
+        {
+          "type": "code",
+          "name": "spawn_workers",
+          "description": "Spawns worker agents for each node in the task graph.",
+          "uses_output_of": "decompose_goal"
+        }
+      ],
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "process_id": { "type": "string" },
+          "worker_count": { "type": "integer" }
+        }
+      }
+    },
+    {
+      "name": "get_process_status",
+      "description": "Returns the current status of a running process, including worker agent states.",
+      "endpoint": "/tools/get_process_status",
+      "input_schema": {
+        "type": "object",
+        "required": ["process_id"],
+        "properties": {
+          "process_id": { "type": "string" }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["running", "paused", "completed", "failed"] },
+          "workers": { "type": "array", "items": { "type": "object" } }
+        }
+      }
+    },
+    {
+      "name": "approve_step",
+      "description": "Approves a human-in-the-loop pause point so the process can continue.",
+      "endpoint": "/tools/approve_step",
+      "input_schema": {
+        "type": "object",
+        "required": ["process_id", "step_id"],
+        "properties": {
+          "process_id": { "type": "string" },
+          "step_id": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "resumed": { "type": "boolean" }
+        }
+      }
+    },
+    {
+      "name": "connect_data_source",
+      "description": "Connects a business data source (CRM, database, API) to the agent's tool set.",
+      "endpoint": "/tools/connect_data_source",
+      "auth_ref": "hive_workspace_api_key",
+      "input_schema": {
+        "type": "object",
+        "required": ["source_type", "connection_id"],
+        "properties": {
+          "source_type": {
+            "type": "string",
+            "description": "Type of data source. e.g. salesforce, postgres, rest_api."
+          },
+          "connection_id": {
+            "type": "string",
+            "description": "Reference ID to the connection config stored in the runtime environment. Not the credential itself."
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "connected": { "type": "boolean" },
+          "source_id": { "type": "string" }
+        }
+      }
+    }
+  ],
+  "workforce": {
+    "role": "manager",
+    "connections": [
+      {
+        "target_agent_id": "hive-worker-agent",
+        "connection_type": "ai",
+        "label": "Delegate tasks to worker agents based on goal decomposition"
+      },
+      {
+        "target_agent_id": "hive-reviewer-agent",
+        "connection_type": "next-step",
+        "label": "Send completed process output to reviewer"
+      }
+    ]
+  },
+  "alerts": [
+    {
+      "trigger": "tool_failure",
+      "action": "escalate",
+      "channel": "webhook",
+      "auth_ref": "hive_alert_webhook"
+    },
+    {
+      "trigger": "human_approval_required",
+      "action": "pause",
+      "channel": "email",
+      "auth_ref": "hive_alert_email"
+    }
+  ],
+  "bulk_schedule": {
+    "enabled": true,
+    "input_source": "api_endpoint",
+    "input_source_ref": "hive_process_queue",
+    "concurrency": 3
+  },
+  "memory": {
+    "enabled": true,
+    "backend": "hive-internal"
+  },
+  "observability": {
+    "websocket": true,
+    "endpoint": "/stream",
+    "logs_endpoint": "/logs"
+  },
+  "server": {
+    "url": "https://your-hive-alp-server.com",
+    "transport": "websocket"
+  },
+  "marketplace": {
+    "category": "automation",
+    "tags": ["business-process", "self-healing", "multi-agent", "hive", "honeycombb"],
+    "pricing_model": "per-run"
+  },
+  "metadata": {
+    "author": "RodrigoMvs123",
+    "version": "0.2.2",
+    "tags": ["hive", "swarm", "business-process", "alp"],
+    "repository": "https://github.com/aden-hive/hive"
+  }
+}
