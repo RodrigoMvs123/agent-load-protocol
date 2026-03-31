@@ -1,16 +1,39 @@
 {
-  "name": "my-alp-server",
-  "version": "0.3.0",
   "alp_version": "0.3.0",
-  "transport": ["http", "websocket"],
-  "endpoints": {
-    "agent": "/agent",
-    "tools": "/tools",
-    "health": "/health",
-    "discover": "/tools/discover",
-    "stream": "/stream",
-    "logs": "/logs"
+  "id": "my-alp-server",
+  "name": "My ALP Server",
+  "description": "Server manifest for an ALP-compatible agent server. Place this at the server root alongside agent.alp.json so clients can discover capabilities before connecting.",
+  "persona": "This is a server manifest, not an agent persona. The persona is defined in agent.alp.json.",
+  "llm": {
+    "provider": "any"
   },
-  "auth": ["bearer_token", "oauth"],
-  "channels": ["stable", "insiders"]
+  "server": {
+    "url": "https://your-alp-server.com",
+    "transport": "http",
+    "channel": "stable",
+    "insiders_url": "https://your-alp-server.com/insiders",
+    "modes": {
+      "read_only": false,
+      "lockdown": false
+    }
+  },
+  "metadata": {
+    "author": "RodrigoMvs123",
+    "version": "0.3.0",
+    "tags": ["server-manifest", "alp"],
+    "repository": "https://github.com/RodrigoMvs123/agent-load-protocol"
+  },
+  "_server_manifest": {
+    "transport": ["http", "websocket"],
+    "endpoints": {
+      "agent": "/agent",
+      "tools": "/tools",
+      "health": "/health",
+      "discover": "/tools/discover",
+      "stream": "/stream",
+      "logs": "/logs"
+    },
+    "auth": ["bearer_token", "oauth"],
+    "channels": ["stable", "insiders"]
+  }
 }
