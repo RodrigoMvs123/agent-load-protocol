@@ -14,7 +14,7 @@
     "alp_version": {
       "type": "string",
       "description": "ALP spec version this card targets.",
-      "example": "0.2.0"
+      "example": "0.3.0"
     },
     "id": {
       "type": "string",
@@ -22,10 +22,12 @@
       "pattern": "^[a-z0-9-]+$"
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "description": "Human-readable agent name."
     },
     "description": {
-      "type": "string"
+      "type": "string",
+      "description": "Short description of what this agent does."
     },
     "agent_type": {
       "type": "string",
@@ -62,7 +64,8 @@
       }
     },
     "persona": {
-      "type": "string"
+      "type": "string",
+      "description": "System prompt / identity."
     },
     "llm": {
       "type": "object",
@@ -86,8 +89,93 @@
         }
       }
     },
+    "toolsets": {
+      "type": "object",
+      "description": "Named groups of tools that can be enabled or disabled as a unit. New in v0.3.0.",
+      "properties": {
+        "groups": {
+          "type": "object",
+          "description": "Map of toolset name to list of tool names.",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "active": {
+          "type": "string",
+          "description": "The toolset active by default. Must match a key in groups.",
+          "default": "default"
+        }
+      }
+    },
+    "tools_discovery": {
+      "type": "object",
+      "description": "Dynamic tool discovery configuration. New in v0.3.0.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "static",
+            "dynamic"
+          ],
+          "default": "static",
+          "description": "static: tools fixed at load time. dynamic: server exposes /tools/discover, /tools/enable, /tools/list at runtime."
+        }
+      }
+    },
+    "pagination": {
+      "type": "object",
+      "description": "Default pagination settings for list tools. New in v0.3.0.",
+      "properties": {
+        "style": {
+          "type": "string",
+          "enum": [
+            "offset",
+            "cursor"
+          ],
+          "default": "offset",
+          "description": "offset: page/per_page. cursor: after field for GraphQL-style pagination."
+        },
+        "default_page_size": {
+          "type": "integer",
+          "default": 30
+        },
+        "max_page_size": {
+          "type": "integer",
+          "default": 100
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "description": "Runtime security configuration. New in v0.3.0.",
+      "properties": {
+        "read_only": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, the ALP client MUST skip all tools where readonly is false."
+        },
+        "lockdown_mode": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, tool outputs from untrusted sources are filtered before reaching the LLM context."
+        },
+        "max_tool_retries": {
+          "type": "integer",
+          "default": 5,
+          "description": "Maximum number of times a tool call may be retried before the agent stops."
+        }
+      }
+    },
     "tools": {
       "type": "array",
+      "description": "List of tools this agent exposes.",
       "items": {
         "type": "object",
         "required": [
@@ -105,6 +193,57 @@
           "endpoint": {
             "type": "string"
           },
+          "readonly": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, this tool performs no mutations. Clients in read_only mode MUST skip tools where readonly is false."
+          },
+          "deprecated": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, this tool is deprecated. Clients SHOULD warn users."
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Previous names for this tool preserved for backward compatibility."
+          },
+          "replaces": {
+            "type": "string",
+            "description": "Name of the tool this one replaces, if any."
+          },
+          "auth": {
+            "type": "object",
+            "description": "Auth requirements for this tool. New in v0.3.0.",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "bearer_token",
+                  "oauth",
+                  "api_key",
+                  "none"
+                ],
+                "default": "none"
+              },
+              "required_scopes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "OAuth scopes required for this tool to function."
+              },
+              "accepted_scopes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Broader set of OAuth scopes that satisfy this tool."
+              }
+            }
+          },
           "auth_ref": {
             "type": "string",
             "description": "Credential reference ID. Never the actual secret."
@@ -112,9 +251,12 @@
           "input_schema": {
             "type": "object"
           },
+          "output_schema": {
+            "type": "object"
+          },
           "steps": {
             "type": "array",
-            "description": "Ordered pipeline of steps the tool executes internally. New in v0.2.2.",
+            "description": "Ordered pipeline of steps the tool executes internally.",
             "items": {
               "type": "object",
               "required": [
@@ -129,8 +271,7 @@
                     "code",
                     "integration",
                     "knowledge_search"
-                  ],
-                  "description": "Kind of step."
+                  ]
                 },
                 "name": {
                   "type": "string"
@@ -139,15 +280,14 @@
                   "type": "string"
                 },
                 "uses_output_of": {
-                  "type": "string",
-                  "description": "Step name whose output this step uses as input."
+                  "type": "string"
                 }
               }
             }
           },
-          "output_schema": {
-            "type": "object",
-            "description": "JSON schema for the tool output returned to the agent."
+          "description_override_key": {
+            "type": "string",
+            "description": "Env var key the runtime checks to override this tool description at load time. e.g. TOOL_GITHUB_API_CALL_DESCRIPTION."
           }
         }
       }
@@ -166,7 +306,7 @@
     },
     "observability": {
       "type": "object",
-      "description": "Observability and streaming config. New in v0.2.0.",
+      "description": "Observability and streaming config.",
       "properties": {
         "websocket": {
           "type": "boolean",
@@ -182,7 +322,7 @@
     },
     "marketplace": {
       "type": "object",
-      "description": "Marketplace listing metadata. New in v0.2.0.",
+      "description": "Marketplace listing metadata.",
       "properties": {
         "category": {
           "type": "string"
@@ -208,6 +348,207 @@
         }
       }
     },
+    "variables": {
+      "type": "object",
+      "description": "Runtime template variables injected into persona and tool prompts.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "description"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean",
+            "default": false
+          },
+          "default": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "triggers": {
+      "type": "array",
+      "description": "Events that automatically start the agent.",
+      "items": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "webhook",
+              "schedule",
+              "email",
+              "manual",
+              "event"
+            ]
+          },
+          "config": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "knowledge": {
+      "type": "array",
+      "description": "Knowledge sources attached to the agent.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "document",
+              "url",
+              "database",
+              "api"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "auth_ref": {
+            "type": "string"
+          },
+          "retrieval_mode": {
+            "type": "string",
+            "enum": [
+              "add_all_to_prompt",
+              "allow_agent_to_search"
+            ],
+            "default": "allow_agent_to_search"
+          }
+        }
+      }
+    },
+    "platform": {
+      "type": "object",
+      "description": "Origin platform metadata.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "agent_id": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "export_url": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "workforce": {
+      "type": "object",
+      "description": "Workforce role and connections for multi-agent teams.",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "standalone",
+            "manager",
+            "worker",
+            "reviewer"
+          ],
+          "default": "standalone"
+        },
+        "connections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "target_agent_id",
+              "connection_type"
+            ],
+            "properties": {
+              "target_agent_id": {
+                "type": "string"
+              },
+              "connection_type": {
+                "type": "string",
+                "enum": [
+                  "ai",
+                  "next-step"
+                ]
+              },
+              "condition": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "alerts": {
+      "type": "array",
+      "description": "Alert and escalation rules.",
+      "items": {
+        "type": "object",
+        "required": [
+          "trigger",
+          "action"
+        ],
+        "properties": {
+          "trigger": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "notify",
+              "escalate",
+              "pause",
+              "stop"
+            ]
+          },
+          "channel": {
+            "type": "string"
+          },
+          "auth_ref": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "bulk_schedule": {
+      "type": "object",
+      "description": "Bulk execution configuration.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "input_source": {
+          "type": "string"
+        },
+        "input_source_ref": {
+          "type": "string"
+        },
+        "concurrency": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      }
+    },
     "server": {
       "type": "object",
       "required": [
@@ -229,7 +570,36 @@
         },
         "region": {
           "type": "string",
-          "description": "Region identifier for region-scoped API endpoints. e.g. f1db6c resolves to api-f1db6c.stack.tryrelevance.com."
+          "description": "Region ID for region-scoped API endpoints."
+        },
+        "channel": {
+          "type": "string",
+          "enum": [
+            "stable",
+            "beta",
+            "insiders"
+          ],
+          "default": "stable",
+          "description": "Release channel. insiders gives access to experimental tools."
+        },
+        "insiders_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Alternate URL for the insiders channel."
+        },
+        "modes": {
+          "type": "object",
+          "description": "Server-level mode flags.",
+          "properties": {
+            "read_only": {
+              "type": "boolean",
+              "default": false
+            },
+            "lockdown": {
+              "type": "boolean",
+              "default": false
+            }
+          }
         }
       }
     },
@@ -251,233 +621,6 @@
         "repository": {
           "type": "string",
           "format": "uri"
-        }
-      }
-    },
-    "variables": {
-      "type": "object",
-      "description": "Runtime template variables injected into the persona and tool prompts. Values are resolved by the runtime, not stored in the card. Custom API keys follow the {{secrets.chains_your_api_key}} pattern in tool steps. New in v0.2.1.",
-      "additionalProperties": {
-        "type": "object",
-        "required": [
-          "description"
-        ],
-        "properties": {
-          "description": {
-            "type": "string",
-            "description": "What this variable represents."
-          },
-          "required": {
-            "type": "boolean",
-            "default": false
-          },
-          "default": {
-            "type": "string",
-            "description": "Default value if not provided by the runtime."
-          }
-        }
-      }
-    },
-    "triggers": {
-      "type": "array",
-      "description": "Events that automatically start the agent. New in v0.2.1.",
-      "items": {
-        "type": "object",
-        "required": [
-          "type"
-        ],
-        "properties": {
-          "type": {
-            "type": "string",
-            "enum": [
-              "webhook",
-              "schedule",
-              "email",
-              "manual",
-              "event"
-            ],
-            "description": "Trigger type."
-          },
-          "config": {
-            "type": "object",
-            "description": "Trigger-specific configuration. e.g. cron expression for schedule, endpoint path for webhook."
-          }
-        }
-      }
-    },
-    "knowledge": {
-      "type": "array",
-      "description": "Knowledge sources attached to the agent. Documents and data the agent can retrieve from. New in v0.2.1.",
-      "items": {
-        "type": "object",
-        "required": [
-          "id",
-          "type"
-        ],
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Identifier for this knowledge source."
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "document",
-              "url",
-              "database",
-              "api"
-            ],
-            "description": "Kind of knowledge source."
-          },
-          "description": {
-            "type": "string"
-          },
-          "auth_ref": {
-            "type": "string",
-            "description": "Credential reference if the source requires auth."
-          },
-          "retrieval_mode": {
-            "type": "string",
-            "enum": [
-              "add_all_to_prompt",
-              "allow_agent_to_search"
-            ],
-            "default": "allow_agent_to_search",
-            "description": "add_all_to_prompt: entire knowledge set included every run. allow_agent_to_search: agent uses RAG to pull only relevant content."
-          }
-        }
-      }
-    },
-    "platform": {
-      "type": "object",
-      "description": "Origin platform metadata. Describes where the agent was built. New in v0.2.1.",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Platform name.",
-          "example": "relevance-ai"
-        },
-        "agent_id": {
-          "type": "string",
-          "description": "The agent ID on the origin platform."
-        },
-        "project_id": {
-          "type": "string",
-          "description": "The project or workspace ID on the origin platform."
-        },
-        "export_url": {
-          "type": "string",
-          "format": "uri",
-          "description": "URL to the agent on the origin platform."
-        }
-      }
-    },
-    "workforce": {
-      "type": "object",
-      "description": "Workforce configuration. Describes how this agent connects to others in a multi-agent team. New in v0.2.2.",
-      "properties": {
-        "role": {
-          "type": "string",
-          "enum": [
-            "standalone",
-            "manager",
-            "worker",
-            "reviewer"
-          ],
-          "default": "standalone",
-          "description": "Role of this agent in the workforce."
-        },
-        "connections": {
-          "type": "array",
-          "description": "Outbound connections to other agents in the workforce.",
-          "items": {
-            "type": "object",
-            "required": [
-              "target_agent_id",
-              "connection_type"
-            ],
-            "properties": {
-              "target_agent_id": {
-                "type": "string",
-                "description": "The ALP id of the agent to hand off to."
-              },
-              "connection_type": {
-                "type": "string",
-                "enum": [
-                  "ai",
-                  "next-step"
-                ],
-                "description": "ai: agent decides when to hand off. next-step: mandatory sequential transition."
-              },
-              "condition": {
-                "type": "string",
-                "description": "Optional condition expression for conditional routing."
-              },
-              "label": {
-                "type": "string",
-                "description": "Human-readable label for this connection."
-              }
-            }
-          }
-        }
-      }
-    },
-    "alerts": {
-      "type": "array",
-      "description": "Alert and escalation rules. Defines when the agent notifies humans or escalates. New in v0.2.2.",
-      "items": {
-        "type": "object",
-        "required": [
-          "trigger",
-          "action"
-        ],
-        "properties": {
-          "trigger": {
-            "type": "string",
-            "description": "Condition that fires the alert. e.g. confidence_low, tool_failure, human_approval_required."
-          },
-          "action": {
-            "type": "string",
-            "enum": [
-              "notify",
-              "escalate",
-              "pause",
-              "stop"
-            ],
-            "description": "What to do when the alert fires."
-          },
-          "channel": {
-            "type": "string",
-            "description": "Notification channel. e.g. email, slack, webhook."
-          },
-          "auth_ref": {
-            "type": "string",
-            "description": "Credential reference for the notification channel."
-          }
-        }
-      }
-    },
-    "bulk_schedule": {
-      "type": "object",
-      "description": "Bulk execution configuration. Runs the agent across a list of inputs. New in v0.2.2.",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "default": false
-        },
-        "input_source": {
-          "type": "string",
-          "description": "Where the input list comes from. e.g. knowledge_table, csv, api_endpoint."
-        },
-        "input_source_ref": {
-          "type": "string",
-          "description": "Reference ID to the input source. Resolved by the runtime."
-        },
-        "concurrency": {
-          "type": "integer",
-          "minimum": 1,
-          "description": "Number of parallel runs. Defaults to 1 (sequential).",
-          "default": 1
         }
       }
     }

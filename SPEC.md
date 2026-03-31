@@ -490,3 +490,207 @@ New fields: `workforce`, `alerts`, `bulk_schedule`, `server.region`, `tools[].st
 New capabilities: `workforce-member`, `bulk-execution`, `alerting`, `rag`.
 
 To upgrade, change `alp_version` to `"0.2.2"` and add any new fields relevant to your agent.
+
+---
+
+## 30. Toolsets (v0.3.0)
+
+Inspired by MCP's `--toolsets` flag. Tools can be grouped into named sets that a client enables or disables as a unit. This reduces LLM context size and helps the model make better tool choices.
+
+```json
+"toolsets": {
+  "groups": {
+    "default": ["github_api_call", "create_branch", "create_pull_request"],
+    "code": ["draft_code", "create_or_update_file"],
+    "readonly": ["github_api_call"]
+  },
+  "active": "default"
+}
+```
+
+An ALP client MAY allow the user or runtime to select a toolset via env var or flag. Only tools in the active toolset are registered with the LLM.
+
+## 31. Read-Only Mode (v0.3.0)
+
+Inspired by MCP's `--read-only` flag. A safety primitive that strips all mutating tools automatically.
+
+Declared at the card level in `security.read_only` and at the tool level with `tools[].readonly`:
+
+```json
+"security": {
+  "read_only": false
+}
+```
+
+```json
+{
+  "name": "create_pull_request",
+  "readonly": false
+}
+```
+
+When an ALP client loads in read-only mode, it MUST skip all tools where `readonly` is `false`. Read-only tools (e.g. `get_process_status`) remain available.
+
+## 32. OAuth Scopes Per Tool (v0.3.0)
+
+Inspired by MCP's per-tool scope declarations. Each tool can declare exactly which OAuth scopes it requires and which broader scopes are accepted.
+
+```json
+{
+  "name": "create_pull_request",
+  "auth": {
+    "type": "oauth",
+    "required_scopes": ["repo"],
+    "accepted_scopes": ["repo", "public_repo"]
+  }
+}
+```
+
+This is required for marketplace trust — a user loading an agent needs to know upfront what permissions it will request before any tool is called.
+
+Auth types: `bearer_token`, `oauth`, `api_key`, `none`.
+
+## 33. Dynamic Tool Discovery (v0.3.0)
+
+Inspired by MCP's `--dynamic-toolsets` beta. When enabled, the ALP server exposes three meta-endpoints the LLM can call at runtime to discover and enable tools based on what the task needs.
+
+```json
+"tools_discovery": {
+  "enabled": true,
+  "mode": "dynamic"
+}
+```
+
+When `mode` is `dynamic`, the ALP Server SHOULD expose:
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/tools/discover` | GET | Returns all available toolsets and their tools |
+| `/tools/enable` | POST | Enables a toolset for the current session |
+| `/tools/list` | GET | Returns currently enabled tools |
+
+Default is `static` — tools are fixed at load time.
+
+## 34. Lockdown Mode (v0.3.0)
+
+Inspired by MCP's `--lockdown-mode`. Defends against prompt injection from untrusted content sources (e.g. public repository content, external web pages).
+
+```json
+"security": {
+  "lockdown_mode": true
+}
+```
+
+When lockdown is active, the ALP Server MUST filter tool outputs from untrusted sources before passing them to the LLM context. What counts as "untrusted" is runtime-defined — typically any content not authored by a verified workspace member.
+
+## 35. Pagination Standard (v0.3.0)
+
+Inspired by MCP's standardized pagination across all list tools. ALP defines default pagination settings at the card level, and tools that return lists SHOULD include `page`/`per_page` (offset) or `after` (cursor) in their `input_schema`.
+
+```json
+"pagination": {
+  "style": "offset",
+  "default_page_size": 30,
+  "max_page_size": 100
+}
+```
+
+Offset pattern in tool input_schema:
+```json
+"page": { "type": "integer", "minimum": 1, "default": 1 },
+"per_page": { "type": "integer", "minimum": 1, "maximum": 100, "default": 30 }
+```
+
+Cursor pattern:
+```json
+"after": { "type": "string", "description": "Cursor for next page." }
+```
+
+## 36. Deprecated Tool Aliases (v0.3.0)
+
+Inspired by MCP's backward-compatible tool aliasing. When a tool is renamed, the old name is preserved as an alias so existing integrations don't break.
+
+```json
+{
+  "name": "github_api_call",
+  "aliases": ["github_call", "gh_api"],
+  "deprecated": false,
+  "replaces": null
+}
+```
+
+Rules:
+- When a tool is renamed, the old name MUST be listed in `aliases` for at least one major version
+- Deprecated tools MUST be flagged with `"deprecated": true`
+- ALP clients SHOULD warn users when a deprecated tool is invoked
+
+## 37. Tool Description Overrides (v0.3.0)
+
+Inspired by MCP's env-var-based description overrides. Useful for localization and for tuning tool descriptions to specific LLM behaviors without changing the card.
+
+```json
+{
+  "name": "github_api_call",
+  "description": "Makes an authorized request to the GitHub API.",
+  "description_override_key": "TOOL_GITHUB_API_CALL_DESCRIPTION"
+}
+```
+
+At load time, the ALP server checks for the env var named in `description_override_key`. If set, that value replaces the card's `description` before the tool is registered with the LLM.
+
+## 38. Insiders / Preview Channel (v0.3.0)
+
+Inspired by MCP's insiders mode for early access to experimental tools.
+
+```json
+"server": {
+  "url": "https://your-alp-server.com",
+  "transport": "http",
+  "channel": "stable",
+  "insiders_url": "https://your-alp-server.com/insiders"
+}
+```
+
+Channel options: `stable` (default), `beta`, `insiders`.
+
+Clients MAY connect to `insiders_url` when the user opts into experimental features. The insiders channel MAY expose tools not yet in the stable card.
+
+## 39. server.alp.json — Server Manifest (v0.3.0)
+
+Inspired by MCP's `server.json`. A machine-readable server manifest separate from the agent card. Clients read this before connecting to understand what the server supports.
+
+Place `server.alp.json` at the server root alongside `agent.alp.json`:
+
+```json
+{
+  "name": "my-alp-server",
+  "version": "0.3.0",
+  "alp_version": "0.3.0",
+  "transport": ["http", "websocket"],
+  "endpoints": {
+    "agent": "/agent",
+    "tools": "/tools",
+    "health": "/health",
+    "discover": "/tools/discover",
+    "stream": "/stream"
+  },
+  "auth": ["bearer_token", "oauth"],
+  "channels": ["stable", "insiders"]
+}
+```
+
+The ALP Server SHOULD expose `GET /server` returning this manifest. Clients MAY use it to negotiate capabilities before loading the full agent card.
+
+## 40. Migration from v0.2.2
+
+All v0.2.2 Agent Cards are valid v0.3.0 cards. All new fields are optional. No breaking changes.
+
+New top-level fields: `toolsets`, `tools_discovery`, `pagination`, `security`.
+
+New tool-level fields: `readonly`, `deprecated`, `aliases`, `replaces`, `auth`, `description_override_key`.
+
+New server fields: `channel`, `insiders_url`, `modes`.
+
+New artifact: `server.alp.json` server manifest.
+
+To upgrade, change `alp_version` to `"0.3.0"` and add any new fields relevant to your agent.

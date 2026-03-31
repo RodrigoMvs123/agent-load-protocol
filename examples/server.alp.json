@@ -1,0 +1,16 @@
+{
+  "name": "my-alp-server",
+  "version": "0.3.0",
+  "alp_version": "0.3.0",
+  "transport": ["http", "websocket"],
+  "endpoints": {
+    "agent": "/agent",
+    "tools": "/tools",
+    "health": "/health",
+    "discover": "/tools/discover",
+    "stream": "/stream",
+    "logs": "/logs"
+  },
+  "auth": ["bearer_token", "oauth"],
+  "channels": ["stable", "insiders"]
+}
