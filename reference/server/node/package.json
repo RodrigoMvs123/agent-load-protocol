@@ -1,0 +1,20 @@
+{
+  "name": "alp-server-node",
+  "version": "0.3.0",
+  "description": "ALP Reference Server — Node.js / TypeScript",
+  "type": "module",
+  "scripts": {
+    "start": "tsx alp_server.ts",
+    "build": "tsc",
+    "start:compiled": "node dist/alp_server.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "fastify": "^4.28.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0"
+  }
+}

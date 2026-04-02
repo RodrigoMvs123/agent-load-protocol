@@ -26,10 +26,34 @@ Any runtime that speaks ALP can load any agent that ships an Agent Card.
         ↓  exports
   agent.alp.json        ← the Agent Card
         ↓  served by
-  ALP Server            ← exposes /agent, /tools
+  ALP Server            ← exposes /agent, /persona, /tools, /agents
         ↓  loaded by
   Any runtime           ← Claude Code, Claude UI, OSS projects, Codex
 ```
+
+## Protocol Stack
+
+ALP, MCP, and SDK are three layers — not competitors:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ALP  —  agent.alp.json                                     │
+│  identity · persona · tools · memory · llm · auth_ref       │
+└────────────┬──────────────────┬──────────────────┬──────────┘
+             ↓                  ↓                  ↓
+      ┌─────────────┐   ┌─────────────┐   ┌─────────────────┐
+      │     MCP     │   │     SDK     │   │   HTTP / WS     │
+      │ tools only  │   │ full agent  │   │ direct calls    │
+      │ chat/IDEs   │   │ platforms   │   │ custom UIs      │
+      └─────────────┘   └─────────────┘   └─────────────────┘
+             ↓                  ↓                  ↓
+      Claude · VS Code   Relevance AI        Your frontend
+      ChatGPT · Kiro     Hive · LangChain
+```
+
+- **MCP** exposes tools only — callable functions the LLM can invoke. No persona, no memory.
+- **SDK** exposes the full agent but is platform-specific.
+- **ALP** describes the whole agent (like SDK) and tells the runtime where to find the MCP-compatible tool endpoints. ALP uses MCP as its tool-call transport.
 
 ## Repositories
 
@@ -55,7 +79,7 @@ python server.py
 You'll see:
 ```
 🔍 Validating agent.alp.json against ALP schema...
-✅ agent.alp.json is valid ALP v0.1.0
+✅ agent.alp.json is valid ALP v0.4.0
 ```
 
 Then connect to any MCP-compatible runtime by pointing it to `http://localhost:8000/mcp`.
@@ -72,7 +96,7 @@ Minimal valid card:
 
 ```json
 {
-  "alp_version": "0.1.0",
+  "alp_version": "0.4.0",
   "id": "my-agent",
   "name": "My Agent",
   "persona": "You are a helpful assistant.",
@@ -119,21 +143,41 @@ Works with Kiro, Claude Code, Claude Desktop, Cursor, and any MCP-compatible cli
 ```
 agent-load-protocol/
 ├── SPEC.md                          ← The protocol specification
+├── LOADING.md                       ← How to load an agent into any runtime
+├── SECRETS.md                       ← API key placement guide
 ├── schema/
 │   └── agent.alp.schema.json        ← Agent Card JSON schema
 ├── reference/
 │   └── server/
 │       └── python/
-│           ├── alp_server.py
+│           ├── alp_server.py        ← Reference server (/agent /persona /tools /agents)
 │           └── requirements.txt
 ├── examples/
-│   └── hello-agent/
-│       └── agent.alp.json
+│   ├── hello-agent/             ← Minimal starter card
+│   ├── platform-import/         ← Surface 1: exported from Relevance AI / Hive
+│   ├── custom-ui/               ← Surface 2: powering a custom frontend
+│   └── chat-window/             ← Surface 3: registered as MCP server in Claude / VS Code
+├── deploy/
+│   ├── railway.json             ← One-click Railway deploy
+│   ├── fly.toml                 ← Fly.io config
+│   ├── render.yaml              ← Render config
+│   └── README.md                ← Deploy in 3 minutes
 └── .github/
     ├── secrets.template.md
     └── workflows/
         └── validate-schema.yml
 ```
+
+## Releases
+
+| Version | Highlights |
+|---|---|
+| [v0.4.0](releases/v0.4.0.md) | `GET /persona`, `GET /agents`, Node.js server, `LOADING.md`, `SECRETS.md`, `deploy/` |
+| [v0.3.0](releases/v0.3.0.md) | Toolsets, security/read-only, dynamic tool discovery, server manifest |
+| [v0.2.2](releases/v0.2.2.md) | Workforce, tool steps, alerts, bulk schedule |
+| [v0.2.1](releases/v0.2.1.md) | Variables, triggers, knowledge, platform origin |
+| [v0.2.0](releases/v0.2.0.md) | Agent types, capabilities, observability, marketplace, auth_ref |
+| [v0.1.0](releases/v0.1.0.md) | Initial release |
 
 ## Contributing
 

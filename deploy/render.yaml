@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: alp-agent
+    runtime: python
+    buildCommand: pip install -r reference/server/python/requirements.txt
+    startCommand: python reference/server/python/alp_server.py
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: AGENT_CARD_PATH
+        value: examples/hello-agent/agent.alp.json
+      - key: OPENAI_API_KEY
+        sync: false          # set in Render dashboard
+      - key: ANTHROPIC_API_KEY
+        sync: false

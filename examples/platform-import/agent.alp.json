@@ -1,0 +1,48 @@
+{
+  "$schema": "https://raw.githubusercontent.com/RodrigoMvs123/agent-load-protocol/main/schema/agent.alp.schema.json",
+  "alp_version": "0.2.1",
+  "id": "sales-researcher",
+  "name": "Sales Researcher",
+  "description": "Researches companies and contacts before sales calls. Exported from Relevance AI.",
+  "persona": "You are a sales research assistant. Given a company name, you find recent news, funding rounds, key decision-makers, and talking points for a sales call. Be concise and factual.",
+  "agent_type": "single",
+  "llm": {
+    "provider": "any",
+    "model": "user-defined"
+  },
+  "tools": [
+    {
+      "name": "research_company",
+      "description": "Researches a company: recent news, funding, headcount, and key contacts.",
+      "endpoint": "/tools/research_company",
+      "auth_ref": "serper_api_key",
+      "input_schema": {
+        "type": "object",
+        "required": ["company_name"],
+        "properties": {
+          "company_name": {
+            "type": "string",
+            "description": "The name of the company to research."
+          }
+        }
+      }
+    }
+  ],
+  "memory": { "enabled": false },
+  "capabilities": ["tool-use", "web-search"],
+  "platform": {
+    "name": "relevance-ai",
+    "agent_id": "bcbe5a-143fe01a-placeholder",
+    "project_id": "my-project-id",
+    "export_url": "https://app.relevanceai.com/agents/bcbe5a/placeholder"
+  },
+  "server": {
+    "url": "https://your-agent.railway.app",
+    "transport": "http"
+  },
+  "metadata": {
+    "author": "your-username",
+    "version": "1.0.0",
+    "tags": ["sales", "research", "relevance-ai"]
+  }
+}

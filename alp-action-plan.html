@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALP — Action Plan</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #1a1a18;
+    background: #faf9f6;
+    padding: 0 1rem;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 3rem 0 6rem;
+  }
+
+  /* ── Typography ─────────────────────────────────────── */
+  h1 { font-size: 2rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 0.5rem; color: #0f0f0e; }
+  h2 { font-size: 1.35rem; font-weight: 600; margin: 3rem 0 0.75rem; color: #0f0f0e; border-bottom: 1px solid #e2e0d8; padding-bottom: 0.4rem; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 2rem 0 0.5rem; color: #1a1a18; }
+  p  { margin-bottom: 1rem; }
+  ul, ol { margin: 0.5rem 0 1rem 1.5rem; }
+  li { margin-bottom: 0.35rem; }
+  code {
+    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    font-size: 0.85em;
+    background: #eceae3;
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+    color: #3d3d3a;
+  }
+  pre {
+    background: #1e1e1c;
+    color: #d4d2c8;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+    margin: 1rem 0 1.5rem;
+    font-size: 0.83em;
+    line-height: 1.6;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+
+  /* ── Header band ─────────────────────────────────────── */
+  .hero {
+    background: #0f0f0e;
+    color: #f0ede6;
+    border-radius: 12px;
+    padding: 2.5rem 2.5rem 2rem;
+    margin-bottom: 3rem;
+  }
+  .hero .tag {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #8b8b84;
+    margin-bottom: 0.75rem;
+  }
+  .hero h1 { color: #f0ede6; font-size: 2.2rem; }
+  .hero .sub {
+    color: #8b8b84;
+    font-size: 0.97rem;
+    margin-top: 0.75rem;
+  }
+
+  /* ── Diagram card ─────────────────────────────────────── */
+  .diagram-card {
+    background: #fff;
+    border: 1px solid #e2e0d8;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0 2rem;
+    overflow-x: auto;
+  }
+  .diagram-card .caption {
+    font-size: 0.82rem;
+    color: #888882;
+    margin-top: 0.75rem;
+    text-align: center;
+  }
+
+  /* ── Step cards ─────────────────────────────────────── */
+  .steps { display: flex; flex-direction: column; gap: 1rem; margin: 1rem 0 2rem; }
+  .step {
+    display: flex;
+    gap: 1rem;
+    background: #fff;
+    border: 1px solid #e2e0d8;
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    align-items: flex-start;
+  }
+  .step .num {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    background: #0f0f0e;
+    color: #f0ede6;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+  }
+  .step .body { flex: 1; }
+  .step .body strong { display: block; font-size: 0.97rem; margin-bottom: 0.2rem; }
+  .step .body p { font-size: 0.93rem; color: #4a4a46; margin: 0; }
+
+  /* ── Priority table ─────────────────────────────────── */
+  .priority-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0 2rem;
+    font-size: 0.91rem;
+  }
+  .priority-table th {
+    background: #f1efe8;
+    text-align: left;
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid #e2e0d8;
+  }
+  .priority-table td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid #eeece4;
+    vertical-align: top;
+  }
+  .priority-table tr:last-child td { border-bottom: none; }
+  .badge {
+    display: inline-block;
+    padding: 0.15em 0.6em;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .badge-high   { background: #fce8e8; color: #a32d2d; }
+  .badge-medium { background: #faeeda; color: #854f0b; }
+  .badge-low    { background: #eaf3de; color: #3b6d11; }
+
+  /* ── Surface cards ─────────────────────────────────── */
+  .surfaces { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1rem 0 2rem; }
+  .surface-card {
+    background: #fff;
+    border: 1px solid #e2e0d8;
+    border-radius: 10px;
+    padding: 1.1rem 1.1rem 1rem;
+  }
+  .surface-card .icon {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+  }
+  .surface-card strong { display: block; font-size: 0.95rem; margin-bottom: 0.35rem; }
+  .surface-card p { font-size: 0.87rem; color: #4a4a46; margin: 0; line-height: 1.5; }
+  @media (max-width: 620px) { .surfaces { grid-template-columns: 1fr; } }
+
+  /* ── Key/value secret box ─────────────────────────── */
+  .secret-rule {
+    background: #fff9ec;
+    border: 1px solid #f5d98a;
+    border-radius: 10px;
+    padding: 1.1rem 1.4rem;
+    margin: 1rem 0 1.5rem;
+  }
+  .secret-rule p { margin: 0; font-size: 0.93rem; color: #4a3900; }
+
+  /* ── Callout ─────────────────────────────────────── */
+  .callout {
+    background: #f0ede6;
+    border-left: 3px solid #0f0f0e;
+    border-radius: 0 8px 8px 0;
+    padding: 0.9rem 1.2rem;
+    margin: 1.2rem 0 1.5rem;
+    font-size: 0.93rem;
+  }
+
+  /* ── Divider ─────────────────────────────────────── */
+  hr { border: none; border-top: 1px solid #e2e0d8; margin: 2.5rem 0; }
+
+  /* ── SVG helpers (inside diagram-card) ─────────────── */
+  .diagram-card svg text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="tag">Agent Load Protocol</div>
+    <h1>ALP — Action Plan</h1>
+    <p class="sub">
+      Brainstorm → architecture → deliverables.<br>
+      How ALP connects to SDK, MCP, API keys, GitHub, and every chat window.
+    </p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <h2>1. The core insight</h2>
+
+  <p>
+    ALP is not an agent and not a tool runner. It is the <strong>universal manifest</strong> that tells
+    any runtime — IDE, chat window, deployed UI — <em>what</em> an agent is, <em>where</em> it lives,
+    and <em>how</em> to authenticate and call it.
+  </p>
+  <p>
+    SDK and MCP are the transport mechanisms that ALP sits on top of. The relationship is a stack,
+    not a replacement:
+  </p>
+
+  <div class="diagram-card">
+    <!-- DIAGRAM 1: Protocol stack -->
+    <svg width="100%" viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#888882" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- Layer labels (left) -->
+      <text x="30" y="65" font-size="11" fill="#888882" text-anchor="middle" font-family="Arial">Format</text>
+      <text x="30" y="155" font-size="11" fill="#888882" text-anchor="middle" font-family="Arial">Transport</text>
+      <text x="30" y="245" font-size="11" fill="#888882" text-anchor="middle" font-family="Arial">Runtime</text>
+
+      <!-- ALP layer -->
+      <rect x="60" y="30" width="580" height="70" rx="10" fill="#0f0f0e" stroke="none"/>
+      <text x="350" y="60" font-size="14" fill="#f0ede6" text-anchor="middle" font-weight="600" font-family="Arial">ALP — agent.alp.json</text>
+      <text x="350" y="82" font-size="12" fill="#8b8b84" text-anchor="middle" font-family="Arial">identity · persona · tools · memory · llm preference · auth_ref · capabilities</text>
+
+      <!-- arrows -->
+      <line x1="230" y1="100" x2="160" y2="130" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr1)"/>
+      <line x1="350" y1="100" x2="350" y2="130" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr1)"/>
+      <line x1="470" y1="100" x2="540" y2="130" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr1)"/>
+
+      <!-- MCP -->
+      <rect x="60" y="130" width="180" height="56" rx="8" fill="#e6f1fb" stroke="#85b7eb" stroke-width="0.8"/>
+      <text x="150" y="155" font-size="13" fill="#0c447c" text-anchor="middle" font-weight="600" font-family="Arial">MCP</text>
+      <text x="150" y="173" font-size="11" fill="#185fa5" text-anchor="middle" font-family="Arial">tools layer only</text>
+
+      <!-- SDK -->
+      <rect x="260" y="130" width="180" height="56" rx="8" fill="#e6f1fb" stroke="#85b7eb" stroke-width="0.8"/>
+      <text x="350" y="155" font-size="13" fill="#0c447c" text-anchor="middle" font-weight="600" font-family="Arial">SDK</text>
+      <text x="350" y="173" font-size="11" fill="#185fa5" text-anchor="middle" font-family="Arial">agent + tools, platform-specific</text>
+
+      <!-- HTTP/WS -->
+      <rect x="460" y="130" width="180" height="56" rx="8" fill="#e6f1fb" stroke="#85b7eb" stroke-width="0.8"/>
+      <text x="550" y="155" font-size="13" fill="#0c447c" text-anchor="middle" font-weight="600" font-family="Arial">HTTP / WebSocket</text>
+      <text x="550" y="173" font-size="11" fill="#185fa5" text-anchor="middle" font-family="Arial">direct call, any client</text>
+
+      <!-- arrows down -->
+      <line x1="150" y1="186" x2="150" y2="214" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr1)"/>
+      <line x1="350" y1="186" x2="350" y2="214" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr1)"/>
+      <line x1="550" y1="186" x2="550" y2="214" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr1)"/>
+
+      <!-- Runtime boxes -->
+      <rect x="60" y="214" width="180" height="52" rx="8" fill="#fce8e8" stroke="#f09595" stroke-width="0.8"/>
+      <text x="150" y="237" font-size="12" fill="#a32d2d" text-anchor="middle" font-weight="600" font-family="Arial">Claude · ChatGPT · Gemini</text>
+      <text x="150" y="255" font-size="11" fill="#993556" text-anchor="middle" font-family="Arial">chat window (MCP connector)</text>
+
+      <rect x="260" y="214" width="180" height="52" rx="8" fill="#fce8e8" stroke="#f09595" stroke-width="0.8"/>
+      <text x="350" y="237" font-size="12" fill="#a32d2d" text-anchor="middle" font-weight="600" font-family="Arial">VS Code · Cursor · Claude Code</text>
+      <text x="350" y="255" font-size="11" fill="#993556" text-anchor="middle" font-family="Arial">IDE extension / MCP server</text>
+
+      <rect x="460" y="214" width="180" height="52" rx="8" fill="#fce8e8" stroke="#f09595" stroke-width="0.8"/>
+      <text x="550" y="237" font-size="12" fill="#a32d2d" text-anchor="middle" font-weight="600" font-family="Arial">Custom UI</text>
+      <text x="550" y="255" font-size="11" fill="#993556" text-anchor="middle" font-family="Arial">developer's own frontend</text>
+    </svg>
+    <p class="caption">Figure 1 — ALP as the format layer above MCP, SDK, and HTTP transports</p>
+  </div>
+
+  <ul>
+    <li><strong>MCP</strong> exposes <em>tools only</em> — callable functions the LLM can invoke. No concept of persona or memory.</li>
+    <li><strong>SDK</strong> exposes the full agent — identity, memory, persona, tools — but is platform-specific.</li>
+    <li><strong>ALP</strong> describes the whole agent (like SDK), and instructs the runtime where to find the MCP-compatible tool endpoints. ALP uses MCP as its tool-call transport.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Key mental model:</strong> MCP is to tools what ALP is to entire agents.
+    ALP does not replace MCP — it wraps it with identity, persona, memory, and portability.
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <h2>2. How ALP connects the agent from platform to chat window</h2>
+
+  <p>
+    The flow from "agent built on a platform" to "agent live in a chat window" is a
+    four-step chain:
+  </p>
+
+  <div class="diagram-card">
+    <!-- DIAGRAM 2: Loading flow -->
+    <svg width="100%" viewBox="0 0 680 130" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#888882" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- Box 1 -->
+      <rect x="10" y="30" width="138" height="56" rx="8" fill="#f1efe8" stroke="#c8c6bc" stroke-width="0.8"/>
+      <text x="79" y="54" font-size="12" fill="#0f0f0e" text-anchor="middle" font-weight="600" font-family="Arial">Platform</text>
+      <text x="79" y="73" font-size="10.5" fill="#888882" text-anchor="middle" font-family="Arial">Relevance AI, Hive, etc.</text>
+
+      <line x1="148" y1="58" x2="168" y2="58" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr2)"/>
+      <text x="158" y="50" font-size="10" fill="#888882" text-anchor="middle" font-family="Arial">export</text>
+
+      <!-- Box 2 -->
+      <rect x="168" y="30" width="138" height="56" rx="8" fill="#0f0f0e" stroke="none"/>
+      <text x="237" y="54" font-size="12" fill="#f0ede6" text-anchor="middle" font-weight="600" font-family="Arial">agent.alp.json</text>
+      <text x="237" y="73" font-size="10.5" fill="#8b8b84" text-anchor="middle" font-family="Arial">in GitHub repo</text>
+
+      <line x1="306" y1="58" x2="326" y2="58" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr2)"/>
+      <text x="316" y="50" font-size="10" fill="#888882" text-anchor="middle" font-family="Arial">run</text>
+
+      <!-- Box 3 -->
+      <rect x="326" y="30" width="138" height="56" rx="8" fill="#e1f5ee" stroke="#5dcaa5" stroke-width="0.8"/>
+      <text x="395" y="54" font-size="12" fill="#085041" text-anchor="middle" font-weight="600" font-family="Arial">ALP Server</text>
+      <text x="395" y="73" font-size="10.5" fill="#0f6e56" text-anchor="middle" font-family="Arial">deployed, public HTTPS URL</text>
+
+      <line x1="464" y1="58" x2="484" y2="58" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr2)"/>
+      <text x="474" y="50" font-size="10" fill="#888882" text-anchor="middle" font-family="Arial">register</text>
+
+      <!-- Box 4 -->
+      <rect x="484" y="30" width="186" height="56" rx="8" fill="#fce8e8" stroke="#f09595" stroke-width="0.8"/>
+      <text x="577" y="54" font-size="12" fill="#a32d2d" text-anchor="middle" font-weight="600" font-family="Arial">Chat window / IDE</text>
+      <text x="577" y="73" font-size="10.5" fill="#993556" text-anchor="middle" font-family="Arial">Claude, ChatGPT, VS Code…</text>
+
+      <!-- Step labels below -->
+      <text x="79"  y="105" font-size="10" fill="#888882" text-anchor="middle" font-family="Arial">① build agent</text>
+      <text x="237" y="105" font-size="10" fill="#888882" text-anchor="middle" font-family="Arial">② write / export card</text>
+      <text x="395" y="105" font-size="10" fill="#888882" text-anchor="middle" font-family="Arial">③ deploy server</text>
+      <text x="577" y="105" font-size="10" fill="#888882" text-anchor="middle" font-family="Arial">④ register URL as MCP server</text>
+    </svg>
+    <p class="caption">Figure 2 — Four steps from platform to live agent in a chat window</p>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="num">1</div>
+      <div class="body">
+        <strong>Build the agent on any platform</strong>
+        <p>Relevance AI, Hive, LangChain, or from scratch. The platform is where persona, tools, and memory are configured.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div class="body">
+        <strong>Write or export <code>agent.alp.json</code></strong>
+        <p>The Agent Card is the portable description. Commit it to the GitHub repo. It is always safe to publish — no secrets ever enter the card.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div class="body">
+        <strong>Deploy the ALP Server</strong>
+        <p>Run <code>alp_server.py</code> locally or deploy it to Railway / Fly.io / Render. This produces a public HTTPS URL that exposes <code>/agent</code>, <code>/tools</code>, <code>/health</code>, and (new) <code>/persona</code>.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">4</div>
+      <div class="body">
+        <strong>Register the server URL in the target runtime</strong>
+        <p>In Claude: add the URL to <code>claude_desktop_config.json</code> as an MCP server. In ChatGPT: configure as a custom GPT plugin. In VS Code / Cursor: add as an MCP server in settings. The agent is now live in the chat window.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <h2>3. Where the API key lives — the definitive answer</h2>
+
+  <div class="secret-rule">
+    <p>
+      ⚠️ The API key <strong>never enters the Agent Card</strong>.
+      The card is a public document — safe to commit to GitHub.
+      Secrets live in one place only: environment variables on the ALP Server.
+    </p>
+  </div>
+
+  <div class="diagram-card">
+    <!-- DIAGRAM 3: API key placement -->
+    <svg width="100%" viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#888882" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- Agent Card (left) -->
+      <rect x="20" y="20" width="210" height="210" rx="10" fill="#f1efe8" stroke="#c8c6bc" stroke-width="0.8"/>
+      <text x="125" y="48" font-size="13" fill="#0f0f0e" text-anchor="middle" font-weight="600" font-family="Arial">agent.alp.json</text>
+      <text x="125" y="68" font-size="11" fill="#888882" text-anchor="middle" font-family="Arial">✓ id, name, persona</text>
+      <text x="125" y="86" font-size="11" fill="#888882" text-anchor="middle" font-family="Arial">✓ tools (with auth_ref)</text>
+      <text x="125" y="104" font-size="11" fill="#888882" text-anchor="middle" font-family="Arial">✓ memory config</text>
+      <text x="125" y="122" font-size="11" fill="#888882" text-anchor="middle" font-family="Arial">✓ llm preference</text>
+      <text x="125" y="148" font-size="11" fill="#a32d2d" text-anchor="middle" font-weight="600" font-family="Arial">✗ NO actual API keys</text>
+      <text x="125" y="166" font-size="11" fill="#a32d2d" text-anchor="middle" font-family="Arial">✗ NO connection strings</text>
+      <text x="125" y="184" font-size="11" fill="#a32d2d" text-anchor="middle" font-family="Arial">✗ NO passwords</text>
+      <text x="125" y="210" font-size="10" fill="#3b6d11" text-anchor="middle" font-family="Arial">Safe to commit publicly</text>
+
+      <!-- Arrow -->
+      <line x1="230" y1="125" x2="270" y2="125" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr3)"/>
+
+      <!-- ALP Server (middle) -->
+      <rect x="270" y="20" width="200" height="210" rx="10" fill="#e1f5ee" stroke="#5dcaa5" stroke-width="0.8"/>
+      <text x="370" y="48" font-size="13" fill="#085041" text-anchor="middle" font-weight="600" font-family="Arial">ALP Server</text>
+      <text x="370" y="70" font-size="11" fill="#0f6e56" text-anchor="middle" font-family="Arial">reads card from disk</text>
+      <text x="370" y="90" font-size="11" fill="#0f6e56" text-anchor="middle" font-family="Arial">injects secrets at runtime</text>
+      <text x="370" y="115" font-size="10.5" fill="#085041" text-anchor="middle" font-weight="600" font-family="Arial">env vars:</text>
+      <rect x="290" y="122" width="160" height="26" rx="5" fill="#085041" stroke="none"/>
+      <text x="370" y="139" font-size="10" fill="#9fe1cb" text-anchor="middle" font-family="monospace">OPENAI_API_KEY=sk-...</text>
+      <rect x="290" y="154" width="160" height="26" rx="5" fill="#085041" stroke="none"/>
+      <text x="370" y="171" font-size="10" fill="#9fe1cb" text-anchor="middle" font-family="monospace">ANTHROPIC_API_KEY=sk-...</text>
+      <rect x="290" y="186" width="160" height="26" rx="5" fill="#085041" stroke="none"/>
+      <text x="370" y="203" font-size="10" fill="#9fe1cb" text-anchor="middle" font-family="monospace">SERPER_API_KEY=abc...</text>
+
+      <!-- Arrow -->
+      <line x1="470" y1="125" x2="510" y2="125" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr3)"/>
+
+      <!-- Runtime (right) -->
+      <rect x="510" y="20" width="150" height="210" rx="10" fill="#fce8e8" stroke="#f09595" stroke-width="0.8"/>
+      <text x="585" y="48" font-size="13" fill="#a32d2d" text-anchor="middle" font-weight="600" font-family="Arial">Runtime</text>
+      <text x="585" y="70" font-size="11" fill="#993556" text-anchor="middle" font-family="Arial">Claude</text>
+      <text x="585" y="90" font-size="11" fill="#993556" text-anchor="middle" font-family="Arial">ChatGPT</text>
+      <text x="585" y="110" font-size="11" fill="#993556" text-anchor="middle" font-family="Arial">VS Code</text>
+      <text x="585" y="130" font-size="11" fill="#993556" text-anchor="middle" font-family="Arial">Gemini</text>
+      <text x="585" y="160" font-size="10.5" fill="#a32d2d" text-anchor="middle" font-weight="600" font-family="Arial">sees only:</text>
+      <text x="585" y="180" font-size="11" fill="#993556" text-anchor="middle" font-family="Arial">tool names</text>
+      <text x="585" y="198" font-size="11" fill="#993556" text-anchor="middle" font-family="Arial">persona text</text>
+      <text x="585" y="216" font-size="11" fill="#993556" text-anchor="middle" font-family="Arial">tool results</text>
+    </svg>
+    <p class="caption">Figure 3 — Secrets are injected by the ALP Server; the card and runtime never see raw keys</p>
+  </div>
+
+  <p>
+    The card references secrets by name using <code>auth_ref</code>:
+  </p>
+
+<pre><code>{
+  "name": "web_search",
+  "description": "Search the web for current information.",
+  "endpoint": "/tools/web_search",
+  "auth_ref": "serper_api_key"       ← a name, not a value
+}</code></pre>
+
+  <p>
+    At runtime, the ALP Server reads <code>os.environ["SERPER_API_KEY"]</code>
+    and injects it into the tool call. The key never appears in the card or in
+    the chat window's context.
+  </p>
+
+  <p><strong>API key placement per runtime:</strong></p>
+  <table class="priority-table">
+    <thead><tr><th>Runtime</th><th>Where the key goes</th></tr></thead>
+    <tbody>
+      <tr><td>ALP Server (all cases)</td><td><code>.env</code> file or deployment env vars (Railway, Fly.io, etc.)</td></tr>
+      <tr><td>Claude Desktop</td><td>ALP Server env only — Claude never receives the key</td></tr>
+      <tr><td>ChatGPT Plugin</td><td>ALP Server env only — same principle</td></tr>
+      <tr><td>GitHub Actions (CI)</td><td>GitHub Secrets → injected as env vars into the server on deploy</td></tr>
+      <tr><td>VS Code / Cursor</td><td>ALP Server env — the IDE calls the server's endpoints, not the LLM API directly</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <h2>4. Localizing the right agent when the platform has many products</h2>
+
+  <p>
+    When a platform hosts many agents (Relevance AI, Hive HoneyComb), the client needs to know
+    <em>which</em> agent to load. ALP solves this at three levels:
+  </p>
+
+  <ul>
+    <li><strong>URL as locator</strong> — one ALP Server URL per agent, or one server that accepts <code>?agent_id=…</code>. The URL is the unique address.</li>
+    <li><strong><code>id</code> field</strong> — the agent's identifier inside the server.</li>
+    <li><strong><code>platform.agent_id</code> + <code>platform.project_id</code></strong> — traces back to the source platform for provenance.</li>
+  </ul>
+
+  <p><strong>Action:</strong> Add a <code>GET /agents</code> listing endpoint to the ALP Server spec as an optional
+  extension. When one server hosts multiple agents, this endpoint returns an array of cards.
+  Marketplaces (HoneyComb) can read this to display a full catalog without running any agent.</p>
+
+<pre><code>GET /agents
+→ [
+    { "id": "code-reviewer", "name": "Code Reviewer", ... },
+    { "id": "sales-researcher", "name": "Sales Researcher", ... }
+  ]</code></pre>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <h2>5. How the agent loads as a "tool" in the chat window</h2>
+
+  <div class="diagram-card">
+    <!-- DIAGRAM 4: agent as tool registration -->
+    <svg width="100%" viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#888882" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- ALP Server -->
+      <rect x="20" y="30" width="170" height="140" rx="10" fill="#e1f5ee" stroke="#5dcaa5" stroke-width="0.8"/>
+      <text x="105" y="56" font-size="12" fill="#085041" text-anchor="middle" font-weight="600" font-family="Arial">ALP Server</text>
+      <rect x="35" y="65" width="140" height="26" rx="5" fill="#9fe1cb" stroke="none"/>
+      <text x="105" y="82" font-size="10.5" fill="#04342c" text-anchor="middle" font-family="Arial">GET /persona → system prompt</text>
+      <rect x="35" y="97" width="140" height="26" rx="5" fill="#9fe1cb" stroke="none"/>
+      <text x="105" y="114" font-size="10.5" fill="#04342c" text-anchor="middle" font-family="Arial">GET /tools → tool list</text>
+      <rect x="35" y="129" width="140" height="26" rx="5" fill="#9fe1cb" stroke="none"/>
+      <text x="105" y="146" font-size="10.5" fill="#04342c" text-anchor="middle" font-family="Arial">POST /tools/{name} → result</text>
+
+      <!-- Arrow to runtime -->
+      <line x1="190" y1="100" x2="225" y2="100" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr4)"/>
+
+      <!-- ALP Client / Runtime -->
+      <rect x="225" y="30" width="205" height="140" rx="10" fill="#f1efe8" stroke="#c8c6bc" stroke-width="0.8"/>
+      <text x="327" y="56" font-size="12" fill="#0f0f0e" text-anchor="middle" font-weight="600" font-family="Arial">ALP Client (runtime)</text>
+      <text x="327" y="75" font-size="11" fill="#4a4a46" text-anchor="middle" font-family="Arial">① fetches /persona</text>
+      <text x="327" y="95" font-size="11" fill="#4a4a46" text-anchor="middle" font-family="Arial">② injects as system prompt</text>
+      <text x="327" y="115" font-size="11" fill="#4a4a46" text-anchor="middle" font-family="Arial">③ registers /tools as MCP tools</text>
+      <text x="327" y="135" font-size="11" fill="#4a4a46" text-anchor="middle" font-family="Arial">④ routes LLM calls to provider</text>
+      <text x="327" y="155" font-size="11" fill="#4a4a46" text-anchor="middle" font-family="Arial">⑤ manages memory / session</text>
+
+      <!-- Arrow to LLM -->
+      <line x1="430" y1="100" x2="465" y2="100" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr4)"/>
+
+      <!-- LLM + UX -->
+      <rect x="465" y="30" width="195" height="140" rx="10" fill="#faeeda" stroke="#fac775" stroke-width="0.8"/>
+      <text x="562" y="56" font-size="12" fill="#412402" text-anchor="middle" font-weight="600" font-family="Arial">User experience</text>
+      <text x="562" y="78" font-size="11" fill="#633806" text-anchor="middle" font-family="Arial">LLM sees: persona + tools</text>
+      <text x="562" y="98" font-size="11" fill="#633806" text-anchor="middle" font-family="Arial">User sees: an agent, not tools</text>
+      <text x="562" y="122" font-size="11" fill="#633806" text-anchor="middle" font-family="Arial">Tool calls happen silently</text>
+      <text x="562" y="142" font-size="11" fill="#633806" text-anchor="middle" font-family="Arial">Persona shapes every reply</text>
+      <text x="562" y="162" font-size="11" fill="#633806" text-anchor="middle" font-family="Arial">Memory persists across turns</text>
+    </svg>
+    <p class="caption">Figure 4 — How persona, tools, and memory surface together in the chat window</p>
+  </div>
+
+  <p>
+    When an ALP agent loads into a chat window, three things happen in sequence:
+  </p>
+  <ol>
+    <li>The <strong>persona</strong> (<code>/persona</code> endpoint) is fetched and injected as the LLM's system prompt.</li>
+    <li>The <strong>tools</strong> (<code>/tools</code>) are registered as MCP-compatible callable functions — this is what the LLM sees as "tools it can use".</li>
+    <li>The <strong>memory</strong> config tells the runtime whether to persist conversation state between sessions.</li>
+  </ol>
+  <p>
+    The user experiences talking to an agent. The LLM experiences a system prompt and a toolset.
+    The underlying mechanism is the ALP Client stitching them together.
+  </p>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <h2>6. The GitHub repo as the portable agent</h2>
+
+  <p>
+    The GitHub repo <em>is</em> the agent. It contains the card and the server.
+    To make it live in any chat window:
+  </p>
+
+<pre><code>your-repo/
+├── agent.alp.json          ← the Agent Card (safe to commit publicly)
+├── alp_server.py           ← the ALP Server reference implementation
+├── requirements.txt
+├── .env.example            ← documents required secrets (no actual values)
+└── deploy/
+    ├── railway.json        ← one-click Railway deploy
+    ├── fly.toml            ← Fly.io config
+    └── render.yaml         ← Render config</code></pre>
+
+  <div class="steps">
+    <div class="step">
+      <div class="num">1</div>
+      <div class="body">
+        <strong>Clone the repo</strong>
+        <p><code>git clone https://github.com/RodrigoMvs123/agent-load-protocol</code></p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div class="body">
+        <strong>Set your secrets</strong>
+        <p><code>cp .env.example .env</code> — fill in your API keys. Never commit this file.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div class="body">
+        <strong>Deploy the ALP Server</strong>
+        <p>Push to Railway (or Fly.io). The public URL is your agent's address: <code>https://your-agent.railway.app</code></p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">4</div>
+      <div class="body">
+        <strong>Register in the chat window of choice</strong>
+        <p>Claude: add <code>"url": "https://your-agent.railway.app/tools"</code> to <code>claude_desktop_config.json</code>. Done.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <h2>7. The three surfaces where the agent lives</h2>
+
+  <div class="surfaces">
+    <div class="surface-card">
+      <div class="icon">🏗️</div>
+      <strong>Surface 1 — Platform client</strong>
+      <p>Relevance AI, Hive UI, LangChain. The platform reads the Agent Card natively. ALP is the export/import format. The <code>platform</code> block in the card records provenance.</p>
+    </div>
+    <div class="surface-card">
+      <div class="icon">🖥️</div>
+      <strong>Surface 2 — Deployed UI</strong>
+      <p>Developer builds their own frontend. Calls <code>POST /tools/{name}</code> directly. Full control over UI, branding, and UX. The Agent Card is the API contract.</p>
+    </div>
+    <div class="surface-card">
+      <div class="icon">💬</div>
+      <strong>Surface 3 — Chat window</strong>
+      <p>Claude, ChatGPT, Gemini, VS Code, Perplexity. The ALP Server URL is registered as an MCP server. Lowest-friction surface for end users.</p>
+    </div>
+  </div>
+
+  <div class="diagram-card">
+    <!-- DIAGRAM 5: full architecture overview -->
+    <svg width="100%" viewBox="0 0 680 380" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#888882" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- Top: Platforms -->
+      <rect x="40" y="20" width="600" height="58" rx="10" fill="#0f0f0e" stroke="none"/>
+      <text x="340" y="44" font-size="13" fill="#f0ede6" text-anchor="middle" font-weight="600" font-family="Arial">Platforms — where agents are built</text>
+      <text x="340" y="64" font-size="11" fill="#8b8b84" text-anchor="middle" font-family="Arial">Relevance AI · Hive · LangChain · Custom code</text>
+
+      <!-- Arrow down to card -->
+      <line x1="340" y1="78" x2="340" y2="102" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr5)"/>
+
+      <!-- Agent Card -->
+      <rect x="140" y="102" width="400" height="58" rx="10" fill="#e1f5ee" stroke="#5dcaa5" stroke-width="0.8"/>
+      <text x="340" y="127" font-size="13" fill="#085041" text-anchor="middle" font-weight="600" font-family="Arial">agent.alp.json — Agent Card</text>
+      <text x="340" y="147" font-size="11" fill="#0f6e56" text-anchor="middle" font-family="Arial">identity · persona · tools (auth_ref) · memory · llm · capabilities</text>
+
+      <!-- Arrow card → server -->
+      <line x1="340" y1="160" x2="340" y2="184" stroke="#1d9e75" stroke-width="1" marker-end="url(#arr5)"/>
+
+      <!-- ALP Server + KEY annotation -->
+      <rect x="140" y="184" width="400" height="58" rx="10" fill="#e1f5ee" stroke="#5dcaa5" stroke-width="0.8"/>
+      <text x="320" y="209" font-size="13" fill="#085041" text-anchor="middle" font-weight="600" font-family="Arial">ALP Server</text>
+      <text x="320" y="229" font-size="11" fill="#0f6e56" text-anchor="middle" font-family="Arial">GET /agent · GET /persona · GET /tools · POST /tools/{name}</text>
+      <!-- key badge -->
+      <rect x="500" y="190" width="34" height="46" rx="6" fill="#faeeda" stroke="#fac775" stroke-width="0.8"/>
+      <text x="517" y="210" font-size="9" fill="#412402" text-anchor="middle" font-weight="600" font-family="Arial">API</text>
+      <text x="517" y="224" font-size="9" fill="#412402" text-anchor="middle" font-family="Arial">KEY</text>
+      <text x="517" y="238" font-size="8" fill="#854f0b" text-anchor="middle" font-family="Arial">env var</text>
+
+      <!-- Three arrows down to transport -->
+      <line x1="220" y1="242" x2="160" y2="274" stroke="#1d9e75" stroke-width="1" marker-end="url(#arr5)"/>
+      <line x1="340" y1="242" x2="340" y2="274" stroke="#1d9e75" stroke-width="1" marker-end="url(#arr5)"/>
+      <line x1="460" y1="242" x2="520" y2="274" stroke="#1d9e75" stroke-width="1" marker-end="url(#arr5)"/>
+
+      <!-- Transport: MCP -->
+      <rect x="40" y="274" width="190" height="50" rx="8" fill="#e6f1fb" stroke="#85b7eb" stroke-width="0.8"/>
+      <text x="135" y="296" font-size="12" fill="#0c447c" text-anchor="middle" font-weight="600" font-family="Arial">MCP transport</text>
+      <text x="135" y="314" font-size="10.5" fill="#185fa5" text-anchor="middle" font-family="Arial">chat windows · IDEs</text>
+
+      <!-- Transport: SDK -->
+      <rect x="245" y="274" width="190" height="50" rx="8" fill="#e6f1fb" stroke="#85b7eb" stroke-width="0.8"/>
+      <text x="340" y="296" font-size="12" fill="#0c447c" text-anchor="middle" font-weight="600" font-family="Arial">SDK transport</text>
+      <text x="340" y="314" font-size="10.5" fill="#185fa5" text-anchor="middle" font-family="Arial">platform clients</text>
+
+      <!-- Transport: HTTP -->
+      <rect x="450" y="274" width="190" height="50" rx="8" fill="#e6f1fb" stroke="#85b7eb" stroke-width="0.8"/>
+      <text x="545" y="296" font-size="12" fill="#0c447c" text-anchor="middle" font-weight="600" font-family="Arial">HTTP / WS</text>
+      <text x="545" y="314" font-size="10.5" fill="#185fa5" text-anchor="middle" font-family="Arial">custom frontends</text>
+
+      <!-- Arrow down to surface labels -->
+      <line x1="135" y1="324" x2="135" y2="348" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr5)"/>
+      <line x1="340" y1="324" x2="340" y2="348" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr5)"/>
+      <line x1="545" y1="324" x2="545" y2="348" stroke="#c8c6bc" stroke-width="1" marker-end="url(#arr5)"/>
+
+      <!-- Surface labels -->
+      <text x="135" y="365" font-size="11" fill="#a32d2d" text-anchor="middle" font-weight="600" font-family="Arial">Surface 3 — Chat window</text>
+      <text x="340" y="365" font-size="11" fill="#a32d2d" text-anchor="middle" font-weight="600" font-family="Arial">Surface 1 — Platform</text>
+      <text x="545" y="365" font-size="11" fill="#a32d2d" text-anchor="middle" font-weight="600" font-family="Arial">Surface 2 — Custom UI</text>
+    </svg>
+    <p class="caption">Figure 5 — Full ALP architecture: platform → card → server → transport → surface</p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <h2>8. Deliverables — prioritized action list</h2>
+
+  <table class="priority-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Deliverable</th>
+        <th>Priority</th>
+        <th>What it is</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><code>LOADING.md</code></td>
+        <td><span class="badge badge-high">High</span></td>
+        <td>Step-by-step guide for registering an ALP agent in Claude, ChatGPT, VS Code, and Gemini. Includes the exact config JSON for each.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><code>GET /persona</code> endpoint</td>
+        <td><span class="badge badge-high">High</span></td>
+        <td>New ALP Server endpoint that returns the agent's persona text. Required for runtimes that inject a system prompt before registering tools.</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><code>deploy/</code> folder</td>
+        <td><span class="badge badge-high">High</span></td>
+        <td>One-click deploy configs for Railway, Fly.io, and Render. Turns "getting a public URL" into a 3-minute step, not a 3-hour DevOps task.</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><code>SECRETS.md</code></td>
+        <td><span class="badge badge-high">High</span></td>
+        <td>Definitive guide for API key placement. Table mapping each runtime to where keys go. Based on the diagram in Section 3 above.</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>Expand <code>examples/</code></td>
+        <td><span class="badge badge-medium">Medium</span></td>
+        <td>Three sub-folders: <code>platform-import/</code>, <code>custom-ui/</code>, <code>chat-window/</code>. One complete working example per surface.</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><code>GET /agents</code> listing endpoint</td>
+        <td><span class="badge badge-medium">Medium</span></td>
+        <td>Optional ALP Server extension. Returns array of all Agent Cards hosted by that server. Needed for HoneyComb marketplace integration.</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td>Protocol Stack section in README</td>
+        <td><span class="badge badge-medium">Medium</span></td>
+        <td>The diagram from Section 1 (ALP → MCP / SDK / HTTP → runtimes) as an ASCII or SVG diagram in the README. Answers the "how does ALP relate to MCP?" question instantly for new contributors.</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td>Node.js reference server</td>
+        <td><span class="badge badge-low">Low</span></td>
+        <td>Port of <code>alp_server.py</code> to Node/TypeScript. Unlocks the JavaScript/TypeScript ecosystem and makes the project more accessible to frontend developers.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <h2>9. Key config snippets — ready to use</h2>
+
+  <h3>Registering in Claude Desktop</h3>
+<pre><code>{
+  "mcpServers": {
+    "my-agent": {
+      "url": "https://your-agent.railway.app/tools"
+    }
+  }
+}</code></pre>
+
+  <h3>Registering in VS Code / Cursor (MCP extension)</h3>
+<pre><code>{
+  "mcp.servers": [
+    {
+      "name": "my-agent",
+      "url": "https://your-agent.railway.app/tools"
+    }
+  ]
+}</code></pre>
+
+  <h3>Minimal Agent Card (v0.2.0)</h3>
+<pre><code>{
+  "alp_version": "0.2.0",
+  "id": "my-agent",
+  "name": "My Agent",
+  "description": "A portable AI agent.",
+  "persona": "You are a helpful assistant specialised in ...",
+  "llm": {
+    "provider": "any",
+    "model": "user-defined"
+  },
+  "tools": [
+    {
+      "name": "web_search",
+      "description": "Search the web.",
+      "endpoint": "/tools/web_search",
+      "auth_ref": "serper_api_key"
+    }
+  ],
+  "memory": { "enabled": false },
+  "capabilities": ["tool-use", "web-search"],
+  "server": {
+    "url": "https://your-agent.railway.app",
+    "transport": "http"
+  }
+}</code></pre>
+
+  <h3>Running the ALP Server locally</h3>
+<pre><code>git clone https://github.com/RodrigoMvs123/agent-load-protocol
+cd agent-load-protocol/reference/server/python
+cp .env.example .env           # fill in your API keys
+pip install -r requirements.txt
+AGENT_CARD_PATH=../../examples/hello-agent/agent.alp.json python alp_server.py</code></pre>
+
+  <h3><code>.env.example</code> template</h3>
+<pre><code># LLM provider keys (the ALP Server injects these — never put them in the card)
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+GOOGLE_API_KEY=
+
+# Tool-specific keys (referenced via auth_ref in the card)
+SERPER_API_KEY=
+GITHUB_TOKEN=
+
+# Server config
+PORT=8000
+AGENT_CARD_PATH=../../examples/hello-agent/agent.alp.json</code></pre>
+
+  <hr>
+
+  <p style="font-size:0.88rem; color:#888882; text-align:center;">
+    Agent Load Protocol · github.com/RodrigoMvs123/agent-load-protocol ·
+    <a href="mailto:rodrigomvsrodrigo@gmail.com" style="color:#888882;">rodrigomvsrodrigo@gmail.com</a>
+  </p>
+
+</div>
+</body>
+</html>

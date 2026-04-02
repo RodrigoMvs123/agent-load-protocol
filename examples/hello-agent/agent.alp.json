@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/RodrigoMvs123/agent-load-protocol/main/schema/agent.alp.schema.json",
-  "alp_version": "0.1.0",
+  "alp_version": "0.4.0",
   "id": "hello-agent",
   "name": "Hello Agent",
   "description": "A minimal ALP-compatible agent. Clone this and replace the tools with your own.",

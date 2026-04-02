@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/RodrigoMvs123/agent-load-protocol/main/schema/agent.alp.schema.json",
+  "alp_version": "0.2.0",
+  "id": "web-researcher",
+  "name": "Web Researcher",
+  "description": "Searches the web and summarises findings. Optimised for chat window use via MCP.",
+  "persona": "You are a research assistant. When asked a question, you search the web for current information and provide a clear, sourced summary. Always cite your sources. Be concise.",
+  "agent_type": "single",
+  "llm": {
+    "provider": "any",
+    "model": "user-defined"
+  },
+  "tools": [
+    {
+      "name": "web_search",
+      "description": "Searches the web for current information on a topic.",
+      "endpoint": "/tools/web_search",
+      "auth_ref": "serper_api_key",
+      "input_schema": {
+        "type": "object",
+        "required": ["query"],
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The search query."
+          },
+          "num_results": {
+            "type": "integer",
+            "description": "Number of results to return. Default 5.",
+            "default": 5
+          }
+        }
+      }
+    },
+    {
+      "name": "fetch_page",
+      "description": "Fetches and extracts the text content of a web page.",
+      "endpoint": "/tools/fetch_page",
+      "input_schema": {
+        "type": "object",
+        "required": ["url"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL to fetch."
+          }
+        }
+      }
+    }
+  ],
+  "memory": { "enabled": false },
+  "capabilities": ["tool-use", "web-search"],
+  "server": {
+    "url": "https://your-agent.railway.app",
+    "transport": "http"
+  },
+  "metadata": {
+    "author": "your-username",
+    "version": "1.0.0",
+    "tags": ["research", "web-search", "chat-window"]
+  }
+}

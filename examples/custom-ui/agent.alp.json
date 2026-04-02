@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/RodrigoMvs123/agent-load-protocol/main/schema/agent.alp.schema.json",
+  "alp_version": "0.2.0",
+  "id": "code-reviewer",
+  "name": "Code Reviewer",
+  "description": "Reviews pull requests and suggests improvements. Designed for a custom developer dashboard.",
+  "persona": "You are an expert code reviewer. You give clear, actionable feedback on code quality, security, and performance. You are direct and concise. You always explain why a change is needed, not just what to change.",
+  "agent_type": "single",
+  "llm": {
+    "provider": "any",
+    "model": "user-defined"
+  },
+  "tools": [
+    {
+      "name": "review_diff",
+      "description": "Reviews a git diff and returns structured feedback.",
+      "endpoint": "/tools/review_diff",
+      "auth_ref": "github_token",
+      "input_schema": {
+        "type": "object",
+        "required": ["diff"],
+        "properties": {
+          "diff": {
+            "type": "string",
+            "description": "The git diff to review."
+          },
+          "language": {
+            "type": "string",
+            "description": "The primary programming language of the diff."
+          }
+        }
+      }
+    },
+    {
+      "name": "get_pr_diff",
+      "description": "Fetches the diff for a GitHub pull request.",
+      "endpoint": "/tools/get_pr_diff",
+      "auth_ref": "github_token",
+      "input_schema": {
+        "type": "object",
+        "required": ["repo", "pr_number"],
+        "properties": {
+          "repo": {
+            "type": "string",
+            "description": "The GitHub repo in owner/repo format."
+          },
+          "pr_number": {
+            "type": "integer",
+            "description": "The pull request number."
+          }
+        }
+      }
+    }
+  ],
+  "memory": { "enabled": false },
+  "capabilities": ["tool-use", "code-execution"],
+  "server": {
+    "url": "https://your-agent.railway.app",
+    "transport": "http"
+  },
+  "metadata": {
+    "author": "your-username",
+    "version": "1.0.0",
+    "tags": ["code-review", "github", "developer-tools"]
+  }
+}
