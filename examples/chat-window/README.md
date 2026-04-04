@@ -63,6 +63,7 @@ python reference/server/python/alp_server.py
 ```
 
 Then use `http://localhost:8000/tools` as the MCP server URL in any of the configs above.
+The live equivalent is `https://agent-load-protocol.onrender.com/tools`.
 
 ## What happens when the agent loads
 

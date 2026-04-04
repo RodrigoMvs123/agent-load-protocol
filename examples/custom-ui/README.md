@@ -33,6 +33,7 @@ python examples/custom-ui/client.py
 
 ```bash
 curl http://localhost:8000/persona
+# Live equivalent: https://agent-load-protocol.onrender.com/persona
 # → {"persona": "You are an expert code reviewer...", "id": "code-reviewer", "name": "Code Reviewer"}
 ```
 

@@ -31,6 +31,33 @@ Any runtime that speaks ALP can load any agent that ships an Agent Card.
   Any runtime           ← Claude Code, Claude UI, OSS projects, Codex
 ```
 
+Live reference server: **https://agent-load-protocol.onrender.com**
+
+## Live Demo
+
+The reference server is deployed and running. Hit any endpoint directly:
+
+| Endpoint | URL |
+|---|---|
+| `/health` | https://agent-load-protocol.onrender.com/health |
+| `/agent` | https://agent-load-protocol.onrender.com/agent |
+| `/mcp` | https://agent-load-protocol.onrender.com/mcp |
+
+To load the live agent into any MCP-compatible runtime, add this to your config:
+
+```json
+{
+  "mcpServers": {
+    "hello-agent": {
+      "type": "http",
+      "url": "https://agent-load-protocol.onrender.com/mcp"
+    }
+  }
+}
+```
+
+Works with Claude Desktop, Claude Code, VS Code, Cursor, and Kiro — no setup required.
+
 ## Protocol Stack
 
 ALP, MCP, and SDK are three layers — not competitors:
@@ -89,7 +116,11 @@ Then connect to any MCP-compatible runtime by pointing it to `http://localhost:8
 1. Create an `agent.alp.json` that validates against the schema:
 
 ```bash
+# From GitHub (always latest)
 curl https://raw.githubusercontent.com/RodrigoMvs123/agent-load-protocol/main/schema/agent.alp.schema.json
+
+# Or from the live server
+curl https://agent-load-protocol.onrender.com/agent
 ```
 
 Minimal valid card:
