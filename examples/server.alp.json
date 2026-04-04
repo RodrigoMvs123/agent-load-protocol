@@ -1,5 +1,5 @@
 {
-  "alp_version": "0.3.0",
+  "alp_version": "0.4.0",
   "id": "my-alp-server",
   "name": "My ALP Server",
   "description": "Server manifest for an ALP-compatible agent server. Place this at the server root alongside agent.alp.json so clients can discover capabilities before connecting.",
@@ -19,7 +19,7 @@
   },
   "metadata": {
     "author": "RodrigoMvs123",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "tags": ["server-manifest", "alp"],
     "repository": "https://github.com/RodrigoMvs123/agent-load-protocol"
   },

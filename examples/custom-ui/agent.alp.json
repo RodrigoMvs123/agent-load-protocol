@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/RodrigoMvs123/agent-load-protocol/main/schema/agent.alp.schema.json",
-  "alp_version": "0.2.0",
+  "alp_version": "0.4.0",
   "id": "code-reviewer",
   "name": "Code Reviewer",
   "description": "Reviews pull requests and suggests improvements. Designed for a custom developer dashboard.",

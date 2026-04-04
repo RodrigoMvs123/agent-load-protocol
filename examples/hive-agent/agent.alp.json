@@ -1,5 +1,5 @@
 {
-  "alp_version": "0.2.2",
+  "alp_version": "0.4.0",
   "id": "hive-business-process-agent",
   "name": "Hive Business Process Agent",
   "description": "A self-healing multi-agent swarm built with Hive. Automates business processes by spawning worker agents dynamically. Recovers from failures automatically via the Hive coding agent (queen).",
@@ -182,7 +182,7 @@
   },
   "metadata": {
     "author": "RodrigoMvs123",
-    "version": "0.2.2",
+    "version": "0.4.0",
     "tags": ["hive", "swarm", "business-process", "alp"],
     "repository": "https://github.com/RodrigoMvs123/agent-load-protocol"
   }

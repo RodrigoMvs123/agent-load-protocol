@@ -14,7 +14,7 @@
     "alp_version": {
       "type": "string",
       "description": "ALP spec version this card targets.",
-      "example": "0.3.0"
+      "example": "0.4.0"
     },
     "id": {
       "type": "string",

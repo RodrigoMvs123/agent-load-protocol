@@ -6,7 +6,7 @@ schema = {
   "type": "object",
   "required": ["alp_version", "id", "name", "persona", "llm", "server"],
   "properties": {
-    "alp_version": {"type": "string", "description": "ALP spec version this card targets.", "example": "0.3.0"},
+    "alp_version": {"type": "string", "description": "ALP spec version this card targets.", "example": "0.4.0"},
     "id": {"type": "string", "description": "Unique slug identifier for this agent.", "pattern": "^[a-z0-9-]+$"},
     "name": {"type": "string", "description": "Human-readable agent name."},
     "description": {"type": "string", "description": "Short description of what this agent does."},

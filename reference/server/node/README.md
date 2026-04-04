@@ -29,7 +29,7 @@ AGENT_CARD_PATH=../../../examples/hello-agent/agent.alp.json npm start
 
 | Endpoint | Method | Description |
 |---|---|---|
-| `/health` | GET | `{"status": "ok", "alp_version": "0.3.0"}` |
+| `/health` | GET | `{"status": "ok", "alp_version": "0.4.0"}` |
 | `/agent` | GET | Returns the Agent Card JSON |
 | `/persona` | GET | Returns `{"persona": "...", "id": "...", "name": "..."}` |
 | `/tools` | GET | Returns `{"tools": [...]}` |

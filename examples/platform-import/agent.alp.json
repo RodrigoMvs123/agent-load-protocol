@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/RodrigoMvs123/agent-load-protocol/main/schema/agent.alp.schema.json",
-  "alp_version": "0.2.1",
+  "alp_version": "0.4.0",
   "id": "sales-researcher",
   "name": "Sales Researcher",
   "description": "Researches companies and contacts before sales calls. Exported from Relevance AI.",

@@ -59,7 +59,7 @@ Your agent is live at `https://your-alp-agent.fly.dev`.
 
 ```bash
 curl https://your-agent.railway.app/health
-# → {"status": "ok", "alp_version": "0.3.0"}
+# → {"status": "ok", "alp_version": "0.4.0"}
 
 curl https://your-agent.railway.app/agent
 # → the full Agent Card JSON

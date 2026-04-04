@@ -1,6 +1,6 @@
 /**
  * ALP Reference Server — Node.js / TypeScript
- * Agent Load Protocol v0.3.0
+ * Agent Load Protocol v0.4.0
  *
  * Serves an agent.alp.json and its tools over HTTP.
  * Mirrors the Python reference server (reference/server/python/alp_server.py).
@@ -46,7 +46,7 @@ function findCards(dir: string): Record<string, unknown>[] {
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 
-app.get("/health", async () => ({ status: "ok", alp_version: "0.3.0" }));
+app.get("/health", async () => ({ status: "ok", alp_version: "0.4.0" }));
 
 app.get("/agent", async (_req, reply) => {
   try {

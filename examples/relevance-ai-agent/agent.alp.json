@@ -1,5 +1,5 @@
 {
-  "alp_version": "0.2.2",
+  "alp_version": "0.4.0",
   "id": "vibe-coding-agent",
   "name": "Vibe Coding Agent",
   "description": "An expert GitHub API agent built on Relevance AI. Creates branches, searches code, drafts fixes, and opens pull requests autonomously from a natural language ticket description.",
@@ -262,7 +262,7 @@
   },
   "metadata": {
     "author": "RodrigoMvs123",
-    "version": "0.2.2",
+    "version": "0.4.0",
     "tags": ["relevance-ai", "github", "coding-agent", "alp"],
     "repository": "https://github.com/RodrigoMvs123/agent-load-protocol"
   }

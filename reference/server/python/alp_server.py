@@ -1,6 +1,6 @@
 """
 ALP Reference Server
-Agent Load Protocol v0.3.0
+Agent Load Protocol v0.4.0
 
 Serves an agent.alp.json and its tools over HTTP.
 """
@@ -40,7 +40,7 @@ class ToolInput(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "alp_version": "0.3.0"}
+    return {"status": "ok", "alp_version": "0.4.0"}
 
 
 @app.get("/agent")
