@@ -45,7 +45,7 @@ Your agent is live at `https://your-alp-agent.fly.dev`.
 
 1. Push your repo to GitHub
 2. Go to [render.com](https://render.com) → **New → Web Service → Connect repo**
-3. Render reads `deploy/render.yaml` automatically
+3. Render reads `render.yaml` from the **repo root** automatically
 4. Add secret env vars in the Render dashboard (Environment tab):
    ```
    OPENAI_API_KEY=sk-...

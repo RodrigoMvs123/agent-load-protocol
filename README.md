@@ -145,6 +145,7 @@ agent-load-protocol/
 ├── SPEC.md                          ← The protocol specification
 ├── LOADING.md                       ← How to load an agent into any runtime
 ├── SECRETS.md                       ← API key placement guide
+├── render.yaml                      ← Render deploy config (root — required by Render)
 ├── schema/
 │   └── agent.alp.schema.json        ← Agent Card JSON schema
 ├── reference/

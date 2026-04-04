@@ -1,11 +1,8 @@
-# NOTE: Render requires render.yaml at the repo root.
-# The authoritative file is /render.yaml — this copy is kept here for reference.
-
 services:
   - type: web
     name: alp-agent
     runtime: python
-    pythonVersion: "3.11"
+    pythonVersion: "3.11.0"
     buildCommand: pip install -r reference/server/python/requirements.txt
     startCommand: python reference/server/python/alp_server.py
     healthCheckPath: /health
