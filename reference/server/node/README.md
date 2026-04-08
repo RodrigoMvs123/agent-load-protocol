@@ -1,7 +1,7 @@
 # ALP Reference Server — Node.js / TypeScript
 
 A TypeScript port of the Python reference server. Feature-identical:
-`/agent`, `/persona`, `/tools`, `/tools/{name}`, `/agents`, `/health`.
+`/agent`, `/persona`, `/tools`, `/tools/{name}`, `/agents`, `/health`, `/.well-known/mcp-server-card`.
 
 ## Requirements
 
@@ -35,6 +35,7 @@ AGENT_CARD_PATH=../../../examples/hello-agent/agent.alp.json npm start
 | `/tools` | GET | Returns `{"tools": [...]}` |
 | `/tools/{name}` | POST | Executes a tool |
 | `/agents` | GET | Returns all Agent Cards hosted by this server |
+| `/.well-known/mcp-server-card` | GET | SEP-2127 compatible MCP Server Card |
 
 ## Adding tool implementations
 

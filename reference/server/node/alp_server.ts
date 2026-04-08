@@ -67,6 +67,14 @@ app.get("/persona", async (_req, reply) => {
   return { persona, id: card.id, name: card.name };
 });
 
+app.get("/.well-known/mcp-server-card", async (_req, reply) => {
+  try {
+    return loadCard();
+  } catch (e: unknown) {
+    reply.status(404).send({ detail: (e as Error).message });
+  }
+});
+
 app.get("/tools", async () => {
   const card = loadCard();
   return { tools: (card.tools as unknown[]) ?? [] };
@@ -117,4 +125,4 @@ const port = parseInt(process.env.PORT ?? "8000", 10);
 await app.listen({ port, host: "0.0.0.0" });
 console.log(`🚀 ALP Server (Node.js) starting on http://localhost:${port}`);
 console.log(`   Agent card : ${AGENT_CARD_PATH}`);
-console.log(`   Endpoints  : /agent  /persona  /tools  /agents  /health`);
+console.log(`   Endpoints  : /agent  /persona  /tools  /agents  /health  /.well-known/mcp-server-card`);

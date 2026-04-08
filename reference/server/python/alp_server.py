@@ -86,6 +86,15 @@ def list_agents():
         raise HTTPException(status_code=404, detail=str(e))
 
 
+@app.get("/.well-known/mcp-server-card")
+def well_known_server_card():
+    """SEP-2127 compatible MCP Server Card endpoint."""
+    try:
+        return load_card()
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 @app.get("/tools")
 def list_tools():
     """Return all tools defined in the Agent Card."""
@@ -122,5 +131,5 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     print(f"🚀 ALP Server starting on http://localhost:{port}")
     print(f"   Agent card : {AGENT_CARD_PATH}")
-    print(f"   Endpoints  : /agent  /persona  /tools  /agents  /health")
+    print(f"   Endpoints  : /agent  /persona  /tools  /agents  /health  /.well-known/mcp-server-card")
     uvicorn.run(app, host="0.0.0.0", port=port)
