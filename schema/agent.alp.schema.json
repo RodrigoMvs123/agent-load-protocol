@@ -603,6 +603,88 @@
         }
       }
     },
+    "server_card": {
+      "type": "object",
+      "description": "SEP-2127 compatible MCP Server Card fields. Makes ALP a superset of the MCP Server Cards specification.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Server name in reverse-DNS format (e.g. io.github/github-mcp-server). Required by SEP-2127.",
+          "pattern": "^[a-z0-9.-]+/[a-z0-9-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Human-readable display name for the MCP server."
+        },
+        "websiteUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the server homepage or documentation."
+        },
+        "repository": {
+          "type": "object",
+          "description": "Repository metadata for the MCP server source code.",
+          "properties": {
+            "url": { "type": "string", "format": "uri" },
+            "source": { "type": "string", "enum": ["github", "gitlab", "bitbucket"] },
+            "subfolder": { "type": "string" }
+          }
+        },
+        "icons": {
+          "type": "array",
+          "description": "Sized icons for display in client UIs.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "src": { "type": "string", "format": "uri" },
+              "sizes": { "type": "array", "items": { "type": "string" } },
+              "mimeType": { "type": "string" },
+              "theme": { "type": "string", "enum": ["light", "dark"] }
+            }
+          }
+        },
+        "remotes": {
+          "type": "array",
+          "description": "HTTP-based transport configurations. SEP-2127 compatible.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["streamable-http", "sse", "websocket"]
+              },
+              "url": { "type": "string", "format": "uri" },
+              "supportedProtocolVersions": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "authentication": {
+                "type": "object",
+                "properties": {
+                  "required": { "type": "boolean" },
+                  "schemes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["bearer", "oauth2", "api_key", "none"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requires": {
+          "type": "object",
+          "description": "Required client capabilities following SEP-2127.",
+          "properties": {
+            "sampling": { "type": "object" },
+            "roots": { "type": "object" },
+            "elicitation": { "type": "object" }
+          }
+        }
+      }
+    },
     "metadata": {
       "type": "object",
       "properties": {
