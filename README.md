@@ -13,7 +13,7 @@ AI agents are platform-locked. Build one on Relevance AI and you cannot load it 
 ALP defines a single artifact — the **Agent Card** (`agent.alp.json`) — that fully describes any agent:
 
 - Identity and persona (system prompt)
-- Tools (MCP-compatible endpoints)
+- Tools (MCP-compatible endpoints — local or proxied)
 - Memory configuration
 - LLM preference (user's choice — any provider)
 
@@ -26,9 +26,26 @@ Any runtime that speaks ALP can load any agent that ships an Agent Card.
         ↓  exports
   agent.alp.json        ← the Agent Card
         ↓  served by
-  ALP Server            ← exposes /agent, /persona, /tools, /agents
+  ALP Server            ← exposes /agent, /persona, /tools, /agents, /mcp
         ↓  loaded by
-  Any runtime           ← Claude Code, Claude UI, OSS projects, Codex
+  Any runtime           ← Kiro, Claude Code, Claude Desktop, Cursor, VS Code
+```
+
+### v0.5.0 — Proxy mode
+
+If your agent already has HTTP tool endpoints, the ALP Server forwards calls
+to them automatically. No MCP or SSE code needed in your agent:
+
+```
+Kiro / Claude Code
+        ↓  tools/call via MCP SSE
+  ALP Server
+        ↓  POST https://your-existing-server.com/api/your-tool
+  Your existing agent
+        ↓  returns result
+  ALP Server
+        ↓  returns to runtime
+  Kiro / Claude Code
 ```
 
 Live reference server: **https://agent-load-protocol.onrender.com**
@@ -91,43 +108,112 @@ ALP, MCP, and SDK are three layers — not competitors:
 
 ## Quick Start
 
-### Option A — Fork the starter (recommended)
+### Run locally
 
-The fastest way to build an ALP-compatible agent. Fork [alp-agent-starter](https://github.com/RodrigoMvs123/alp-agent-starter), edit `agent.alp.json` with your agent's identity and tools, and run it. The server validates your card against this repo's schema on every startup — if it's invalid, it won't start.
+**macOS / Linux:**
+```bash
+git clone https://github.com/RodrigoMvs123/agent-load-protocol
+cd agent-load-protocol/reference/server/python
+pip install -r requirements.txt
+AGENT_CARD_PATH=../../../examples/hello-agent/agent.alp.json python alp_server.py
+```
 
+**Windows PowerShell:**
+```powershell
+git clone https://github.com/RodrigoMvs123/agent-load-protocol
+cd agent-load-protocol\reference\server\python
+python -m pip install -r requirements.txt
+$env:AGENT_CARD_PATH = "..\..\..\examples\hello-agent\agent.alp.json"; python alp_server.py
+```
+
+Server starts at `http://localhost:8000`.
+
+---
+
+### Option A — Proxy an existing agent (v0.5.0, zero code changes)
+
+If your agent already has HTTP tool endpoints, point the ALP card at them:
+
+```json
+{
+  "alp_version": "0.5.0",
+  "id": "my-agent",
+  "name": "My Agent",
+  "persona": "You are a helpful assistant.",
+  "llm": { "provider": "any" },
+  "tools": [
+    {
+      "name": "search",
+      "description": "Search the knowledge base.",
+      "endpoint": "https://your-existing-server.com/api/search"
+    }
+  ],
+  "server": {
+    "url": "http://localhost:8000",
+    "transport": "http"
+  }
+}
+```
+
+**macOS / Linux:**
+```bash
+cd reference/server/python
+AGENT_CARD_PATH=../../../your-agent/agent.alp.json python alp_server.py
+```
+
+**Windows PowerShell:**
+```powershell
+cd reference\server\python
+$env:AGENT_CARD_PATH = "..\..\..\your-agent\agent.alp.json"; python alp_server.py
+```
+
+Connect to Kiro (`.kiro/settings/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "my-agent": {
+      "url": "http://localhost:8000/mcp"
+    }
+  }
+}
+```
+
+**Your existing agent: zero code changes.**
+
+---
+
+### Option B — Fork the starter
+
+The fastest way to build an ALP-compatible agent from scratch. Fork [alp-agent-starter](https://github.com/RodrigoMvs123/alp-agent-starter), edit `agent.alp.json` with your agent's identity and tools, and run it.
+
+**macOS / Linux:**
 ```bash
 git clone https://github.com/YOUR-USERNAME/alp-agent-starter
 cd alp-agent-starter
 pip install -r requirements.txt
-cp .env.example .env   # add your API keys
+cp .env.example .env
 python server.py
 ```
 
-You'll see:
-```
-🔍 Validating agent.alp.json against ALP schema...
-✅ agent.alp.json is valid ALP v0.4.0
+**Windows PowerShell:**
+```powershell
+git clone https://github.com/YOUR-USERNAME/alp-agent-starter
+cd alp-agent-starter
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
+python server.py
 ```
 
-Then connect to any MCP-compatible runtime by pointing it to `http://localhost:8000/mcp`.
+---
 
-### Option B — Build from scratch
+### Option C — Build from scratch
 
 1. Create an `agent.alp.json` that validates against the schema:
 
-```bash
-# From GitHub (always latest)
-curl https://raw.githubusercontent.com/RodrigoMvs123/agent-load-protocol/main/schema/agent.alp.schema.json
-
-# Or from the live server
-curl https://agent-load-protocol.onrender.com/agent
-```
-
-Minimal valid card:
-
 ```json
 {
-  "alp_version": "0.4.0",
+  "alp_version": "0.5.0",
   "id": "my-agent",
   "name": "My Agent",
   "persona": "You are a helpful assistant.",
@@ -139,9 +225,9 @@ Minimal valid card:
 }
 ```
 
-2. Build a server that exposes `/agent`, `/tools`, `/tools/{name}`, and `/mcp`
+2. Build a server that exposes `/agent`, `/tools`, `/tools/{name}`, and `/mcp`.
 
-3. At startup, fetch and validate against the ALP schema — that's what makes it ALP-compliant:
+3. At startup, validate against the ALP schema:
 
 ```python
 import httpx, jsonschema
@@ -154,13 +240,14 @@ async def validate():
     jsonschema.validate(your_agent_card, schema)
 ```
 
-### 3. Load into any MCP runtime
+---
+
+### Load into any MCP runtime
 
 ```json
 {
   "mcpServers": {
     "my-agent": {
-      "type": "http",
       "url": "http://localhost:8000/mcp"
     }
   }
@@ -176,24 +263,28 @@ agent-load-protocol/
 ├── SPEC.md                          ← The protocol specification
 ├── LOADING.md                       ← How to load an agent into any runtime
 ├── SECRETS.md                       ← API key placement guide
-├── render.yaml                      ← Render deploy config (root — required by Render)
+├── render.yaml                      ← Render deploy config
 ├── schema/
 │   └── agent.alp.schema.json        ← Agent Card JSON schema
 ├── reference/
 │   └── server/
 │       └── python/
-│           ├── alp_server.py        ← Reference server (/agent /persona /tools /agents)
+│           ├── alp_server.py        ← Reference server (v0.5.0 — proxy + MCP SSE)
 │           └── requirements.txt
 ├── examples/
-│   ├── hello-agent/             ← Minimal starter card
-│   ├── platform-import/         ← Surface 1: exported from Relevance AI / Hive
-│   ├── custom-ui/               ← Surface 2: powering a custom frontend
-│   └── chat-window/             ← Surface 3: registered as MCP server in Claude / VS Code
+│   ├── hello-agent/                 ← Minimal starter card
+│   ├── platform-import/             ← Surface 1: exported from Relevance AI / Hive
+│   ├── custom-ui/                   ← Surface 2: powering a custom frontend
+│   └── chat-window/                 ← Surface 3: registered as MCP server
+├── releases/
+│   ├── v0.5.0.md                    ← Proxy tool execution + MCP SSE transport
+│   ├── v0.4.0.md                    ← /persona, /agents, Node.js server
+│   └── ...
 ├── deploy/
-│   ├── railway.json             ← One-click Railway deploy
-│   ├── fly.toml                 ← Fly.io config
-│   ├── render.yaml              ← Render config
-│   └── README.md                ← Deploy in 3 minutes
+│   ├── railway.json
+│   ├── fly.toml
+│   ├── render.yaml
+│   └── README.md
 └── .github/
     ├── secrets.template.md
     └── workflows/
@@ -204,6 +295,7 @@ agent-load-protocol/
 
 | Version | Highlights |
 |---|---|
+| [v0.5.0](releases/v0.5.0.md) | Proxy tool execution, MCP SSE transport (`/mcp`), `httpx` dependency |
 | [v0.4.0](releases/v0.4.0.md) | `GET /persona`, `GET /agents`, Node.js server, `LOADING.md`, `SECRETS.md`, `deploy/` |
 | [v0.3.0](releases/v0.3.0.md) | Toolsets, security/read-only, dynamic tool discovery, server manifest |
 | [v0.2.2](releases/v0.2.2.md) | Workforce, tool steps, alerts, bulk schedule |

@@ -1,5 +1,5 @@
 # Agent Load Protocol (ALP) Specification
-Version: 0.4.0
+Version: 0.5.0
 
 > For the history of what changed in each version, see [releases/](releases/).
 
@@ -23,6 +23,7 @@ What MCP (Model Context Protocol) is to tools, ALP is to entire agents.
 | ALP Server | A server that hosts and exposes an Agent Card and its tools |
 | ALP Client | Any runtime that fetches and loads an Agent Card |
 | Tool Endpoint | An MCP-compatible HTTP endpoint exposing a callable function |
+| Proxy Tool | A tool whose endpoint is a full URL — the ALP Server forwards the call |
 | Auth Ref | A string name referencing a credential — never the actual secret |
 
 ---
@@ -35,7 +36,7 @@ The Agent Card is the central artifact of ALP. It is a JSON file that fully desc
 
 ```json
 {
-  "alp_version": "0.4.0",
+  "alp_version": "0.5.0",
   "id": "my-agent",
   "name": "My Agent",
   "persona": "You are a helpful assistant.",
@@ -92,9 +93,11 @@ An ALP Server MUST expose:
 | `/agent` | GET | ✅ | Returns the Agent Card JSON |
 | `/persona` | GET | ✅ | Returns `{"persona": "...", "id": "...", "name": "..."}` |
 | `/tools` | GET | ✅ | Returns `{"tools": [...]}` |
-| `/tools/{name}` | POST | ✅ | Executes a tool, returns `{"result": ..., "error": null}` |
-| `/health` | GET | ✅ | Returns `{"status": "ok", "alp_version": "0.4.0"}` |
+| `/tools/{name}` | POST | ✅ | Executes a tool — local or proxied (v0.5.0) |
+| `/health` | GET | ✅ | Returns `{"status": "ok", "alp_version": "0.5.0"}` |
 | `/agents` | GET | — | Returns `{"agents": [...]}` — all cards on this server |
+| `/mcp` | GET | — | MCP SSE stream — Kiro / MCP-compatible runtimes (v0.5.0) |
+| `/mcp` | POST | — | MCP JSON-RPC message receiver (v0.5.0) |
 
 ### Tool execution
 
@@ -114,9 +117,70 @@ Response:
 { "persona": "You are a helpful assistant...", "id": "my-agent", "name": "My Agent" }
 ```
 
+### Proxy Tool Execution (v0.5.0)
+
+When a tool's `endpoint` in the Agent Card is a full URL, the ALP Server
+forwards the call via HTTP instead of executing locally.
+
+```json
+{
+  "name": "search",
+  "description": "Search the knowledge base.",
+  "endpoint": "https://their-server.com/api/search"
+}
+```
+
+The ALP Server POSTs `{"input": {...}}` to that URL and returns the result
+to the caller. The remote agent needs zero MCP or SSE code.
+
+- Relative endpoint (`/tools/search`) → executes locally on the ALP Server
+- Full URL endpoint (`https://...`) → proxied to the remote agent
+
+This means any existing agent with HTTP tool endpoints can be loaded into
+Kiro or any MCP runtime by adding one `agent.alp.json` file — zero code
+changes to their agent.
+
 ---
 
-## 5. ALP Client Contract
+## 5. MCP SSE Transport (v0.5.0)
+
+The ALP Server exposes a full MCP SSE transport layer for runtimes that
+require it (Kiro, Claude Desktop, VS Code extensions).
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/mcp` | GET | SSE stream — runtime connects here (`text/event-stream`) |
+| `/mcp` | POST | MCP JSON-RPC message receiver |
+
+Supported MCP methods: `initialize`, `tools/list`, `tools/call`, `notifications/*`.
+
+### Kiro config (`.kiro/settings/mcp.json`)
+
+```json
+{
+  "mcpServers": {
+    "my-agent": {
+      "url": "http://localhost:8000/mcp"
+    }
+  }
+}
+```
+
+### Claude Code / Claude Desktop config
+
+```json
+{
+  "mcpServers": {
+    "my-agent": {
+      "url": "http://localhost:8000/tools"
+    }
+  }
+}
+```
+
+---
+
+## 6. ALP Client Contract
 
 An ALP Client MUST:
 
@@ -129,7 +193,7 @@ An ALP Client MUST:
 
 ---
 
-## 6. Security
+## 7. Security
 
 - API keys and secrets MUST NOT appear in the Agent Card
 - Secrets live in environment variables on the ALP Server only
@@ -139,7 +203,7 @@ An ALP Client MUST:
 
 ---
 
-## 7. LLM Agnosticism
+## 8. LLM Agnosticism
 
 ALP does not prescribe an LLM. The `llm` field is a preference, not a requirement. The ALP Client resolves the final LLM based on:
 
@@ -149,7 +213,7 @@ ALP does not prescribe an LLM. The `llm` field is a preference, not a requiremen
 
 ---
 
-## 8. Relation to MCP
+## 9. Relation to MCP
 
 ALP is MCP-compatible at the tool layer. Tool endpoints follow MCP conventions so any MCP-compatible host can call ALP tools. ALP extends MCP by adding the Agent Card layer: identity, persona, memory, and LLM routing.
 
@@ -162,15 +226,15 @@ ALP  —  agent.alp.json  (identity · persona · tools · memory · llm)
 
 ---
 
-## 9. Versioning
+## 10. Versioning
 
-ALP follows semantic versioning. The `alp_version` field in the Agent Card must match a published ALP version. All releases are backward-compatible — a v0.1.0 card is valid in any v0.4.0 runtime.
+ALP follows semantic versioning. The `alp_version` field in the Agent Card must match a published ALP version. All releases are backward-compatible — a v0.1.0 card is valid in any v0.5.0 runtime.
 
 See [releases/](releases/) for the full changelog.
 
 ---
 
-## 10. Reference Implementations
+## 11. Reference Implementations
 
 | Language | Path |
 |---|---|
