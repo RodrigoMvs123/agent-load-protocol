@@ -1,29 +1,24 @@
 name: Validate Agent Cards
-
 on:
   push:
     paths:
-      - "examples/**/*.json"
+      - "examples/**/agent.alp.json"
       - "schema/**"
   pull_request:
     paths:
-      - "examples/**/*.json"
+      - "examples/**/agent.alp.json"
       - "schema/**"
-
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install jsonschema
         run: pip install jsonschema
-
       - name: Validate all agent cards
         run: |
           python - <<'EOF'
@@ -31,13 +26,10 @@ jobs:
           import glob
           import sys
           from jsonschema import validate, ValidationError
-
           with open("schema/agent.alp.schema.json") as f:
               schema = json.load(f)
-
-          cards = glob.glob("examples/**/*.json", recursive=True)
+          cards = glob.glob("examples/**/agent.alp.json", recursive=True)
           errors = []
-
           for card_path in cards:
               with open(card_path) as f:
                   card = json.load(f)
@@ -47,7 +39,6 @@ jobs:
               except ValidationError as e:
                   print(f"  FAIL  {card_path}: {e.message}")
                   errors.append(card_path)
-
           if errors:
               print(f"\n{len(errors)} card(s) failed validation.")
               sys.exit(1)
