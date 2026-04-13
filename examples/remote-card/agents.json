@@ -1,0 +1,5 @@
+{
+  "agents": [
+    "https://raw.githubusercontent.com/YOUR-ORG/YOUR-REPO/main/agent.alp.json"
+  ]
+}

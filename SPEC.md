@@ -1,5 +1,5 @@
 # Agent Load Protocol (ALP) Specification
-Version: 0.5.0
+Version: 0.6.0
 
 > For the history of what changed in each version, see [releases/](releases/).
 
@@ -23,7 +23,8 @@ What MCP (Model Context Protocol) is to tools, ALP is to entire agents.
 | ALP Server | A server that hosts and exposes an Agent Card and its tools |
 | ALP Client | Any runtime that fetches and loads an Agent Card |
 | Tool Endpoint | An MCP-compatible HTTP endpoint exposing a callable function |
-| Proxy Tool | A tool whose endpoint is a full URL — the ALP Server forwards the call |
+| Proxy Tool | A tool whose endpoint is a full URL — the ALP Server forwards the call (v0.5.0) |
+| Remote Card | An Agent Card loaded from a public URL at startup (v0.6.0) |
 | Auth Ref | A string name referencing a credential — never the actual secret |
 
 ---
@@ -36,7 +37,7 @@ The Agent Card is the central artifact of ALP. It is a JSON file that fully desc
 
 ```json
 {
-  "alp_version": "0.5.0",
+  "alp_version": "0.6.0",
   "id": "my-agent",
   "name": "My Agent",
   "persona": "You are a helpful assistant.",
@@ -91,13 +92,16 @@ An ALP Server MUST expose:
 | Endpoint | Method | Required | Description |
 |---|---|---|---|
 | `/agent` | GET | ✅ | Returns the Agent Card JSON |
+| `/agent/refresh` | GET | — | Re-fetches card from `AGENT_CARD_URL` (v0.6.0) |
 | `/persona` | GET | ✅ | Returns `{"persona": "...", "id": "...", "name": "..."}` |
 | `/tools` | GET | ✅ | Returns `{"tools": [...]}` |
 | `/tools/{name}` | POST | ✅ | Executes a tool — local or proxied (v0.5.0) |
-| `/health` | GET | ✅ | Returns `{"status": "ok", "alp_version": "0.5.0"}` |
-| `/agents` | GET | — | Returns `{"agents": [...]}` — all cards on this server |
-| `/mcp` | GET | — | MCP SSE stream — Kiro / MCP-compatible runtimes (v0.5.0) |
-| `/mcp` | POST | — | MCP JSON-RPC message receiver (v0.5.0) |
+| `/health` | GET | ✅ | Returns `{"status": "ok", "alp_version": "0.6.0"}` |
+| `/agents` | GET | — | Returns all cards hosted by this server (v0.4.0 + v0.6.0) |
+| `/mcp` | GET | — | MCP SSE stream — primary agent (v0.5.0) |
+| `/mcp` | POST | — | MCP JSON-RPC receiver — primary agent (v0.5.0) |
+| `/mcp/{agent_id}` | GET | — | MCP SSE stream — specific agent (v0.6.0) |
+| `/mcp/{agent_id}` | POST | — | MCP JSON-RPC receiver — specific agent (v0.6.0) |
 
 ### Tool execution
 
@@ -135,10 +139,6 @@ to the caller. The remote agent needs zero MCP or SSE code.
 
 - Relative endpoint (`/tools/search`) → executes locally on the ALP Server
 - Full URL endpoint (`https://...`) → proxied to the remote agent
-
-This means any existing agent with HTTP tool endpoints can be loaded into
-Kiro or any MCP runtime by adding one `agent.alp.json` file — zero code
-changes to their agent.
 
 ---
 
@@ -180,7 +180,78 @@ Supported MCP methods: `initialize`, `tools/list`, `tools/call`, `notifications/
 
 ---
 
-## 6. ALP Client Contract
+## 6. Remote Card Loading (v0.6.0)
+
+The ALP Server can load an `agent.alp.json` from any public URL at startup
+via the `AGENT_CARD_URL` environment variable.
+
+**Priority order:**
+1. `AGENT_CARD_URL` (remote URL) — fetched at startup, cached in memory
+2. `AGENT_CARD_PATH` (local file) — fallback if URL not set
+
+**macOS / Linux:**
+```bash
+AGENT_CARD_URL=https://raw.githubusercontent.com/org/repo/main/agent.alp.json \
+  python alp_server.py
+```
+
+**Windows PowerShell:**
+```powershell
+$env:AGENT_CARD_URL = "https://raw.githubusercontent.com/org/repo/main/agent.alp.json"
+python alp_server.py
+```
+
+### `GET /agent/refresh`
+
+Re-fetches the card from `AGENT_CARD_URL` without restarting the server:
+
+```json
+{
+  "refreshed": true,
+  "id": "my-agent",
+  "name": "My Agent",
+  "alp_version": "0.6.0",
+  "source": "https://raw.githubusercontent.com/..."
+}
+```
+
+---
+
+## 7. Multi-Agent Manifest (v0.6.0)
+
+A single ALP Server instance can host multiple agents via `AGENTS_MANIFEST` —
+a JSON file listing public card URLs.
+
+```json
+{
+  "agents": [
+    "https://raw.githubusercontent.com/org-a/repo/main/agent.alp.json",
+    "https://raw.githubusercontent.com/org-b/repo/main/agent.alp.json"
+  ]
+}
+```
+
+Each agent is loaded at startup, cached by its `id` field, and served at:
+
+```
+GET  /mcp/{agent_id}   → MCP SSE stream for that agent
+POST /mcp/{agent_id}   → MCP JSON-RPC receiver for that agent
+```
+
+Kiro multi-agent config:
+
+```json
+{
+  "mcpServers": {
+    "agent-a": { "url": "http://localhost:8000/mcp/agent-a" },
+    "agent-b": { "url": "http://localhost:8000/mcp/agent-b" }
+  }
+}
+```
+
+---
+
+## 8. ALP Client Contract
 
 An ALP Client MUST:
 
@@ -193,7 +264,7 @@ An ALP Client MUST:
 
 ---
 
-## 7. Security
+## 9. Security
 
 - API keys and secrets MUST NOT appear in the Agent Card
 - Secrets live in environment variables on the ALP Server only
@@ -203,7 +274,7 @@ An ALP Client MUST:
 
 ---
 
-## 8. LLM Agnosticism
+## 10. LLM Agnosticism
 
 ALP does not prescribe an LLM. The `llm` field is a preference, not a requirement. The ALP Client resolves the final LLM based on:
 
@@ -213,7 +284,7 @@ ALP does not prescribe an LLM. The `llm` field is a preference, not a requiremen
 
 ---
 
-## 9. Relation to MCP
+## 11. Relation to MCP
 
 ALP is MCP-compatible at the tool layer. Tool endpoints follow MCP conventions so any MCP-compatible host can call ALP tools. ALP extends MCP by adding the Agent Card layer: identity, persona, memory, and LLM routing.
 
@@ -226,15 +297,15 @@ ALP  —  agent.alp.json  (identity · persona · tools · memory · llm)
 
 ---
 
-## 10. Versioning
+## 12. Versioning
 
-ALP follows semantic versioning. The `alp_version` field in the Agent Card must match a published ALP version. All releases are backward-compatible — a v0.1.0 card is valid in any v0.5.0 runtime.
+ALP follows semantic versioning. The `alp_version` field in the Agent Card must match a published ALP version. All releases are backward-compatible — a v0.1.0 card is valid in any v0.6.0 runtime.
 
 See [releases/](releases/) for the full changelog.
 
 ---
 
-## 11. Reference Implementations
+## 13. Reference Implementations
 
 | Language | Path |
 |---|---|

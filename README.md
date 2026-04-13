@@ -4,9 +4,13 @@
 
 What [MCP](https://modelcontextprotocol.io) is to tools, ALP is to entire agents.
 
+---
+
 ## The Problem
 
 AI agents are platform-locked. Build one on Relevance AI and you cannot load it into Claude Code. Build one in LangChain and you cannot drop it into another project without rewriting everything. There is no universal format for a complete, portable agent.
+
+---
 
 ## The Solution
 
@@ -18,6 +22,8 @@ ALP defines a single artifact — the **Agent Card** (`agent.alp.json`) — that
 - LLM preference (user's choice — any provider)
 
 Any runtime that speaks ALP can load any agent that ships an Agent Card.
+
+---
 
 ## How It Works
 
@@ -33,26 +39,37 @@ Any runtime that speaks ALP can load any agent that ships an Agent Card.
 
 ### v0.5.0 — Proxy mode
 
-If your agent already has HTTP tool endpoints, the ALP Server forwards calls
-to them automatically. No MCP or SSE code needed in your agent:
+If your agent already has HTTP tool endpoints, the ALP Server forwards calls automatically. No MCP or SSE code needed in your agent:
 
 ```
 Kiro / Claude Code
         ↓  tools/call via MCP SSE
   ALP Server
         ↓  POST https://your-existing-server.com/api/your-tool
-  Your existing agent
+  Your existing agent   ← zero code changes
         ↓  returns result
-  ALP Server
-        ↓  returns to runtime
   Kiro / Claude Code
 ```
 
-Live reference server: **https://agent-load-protocol.onrender.com**
+### v0.6.0 — Remote card mode
+
+Ship an `agent.alp.json` in your GitHub repo. Point one hosted ALP Server at it. Your agent is live in Kiro — you never run a server:
+
+```
+Your GitHub repo
+  └── agent.alp.json    ← you own this, one file
+
+Hosted ALP Server
+  └── reads card from GitHub URL
+  └── exposes /mcp for Kiro
+  └── proxies tool calls to your endpoints
+```
+
+---
 
 ## Live Demo
 
-The reference server is deployed and running. Hit any endpoint directly:
+Live reference server: **https://agent-load-protocol.onrender.com**
 
 | Endpoint | URL |
 |---|---|
@@ -60,7 +77,7 @@ The reference server is deployed and running. Hit any endpoint directly:
 | `/agent` | https://agent-load-protocol.onrender.com/agent |
 | `/mcp` | https://agent-load-protocol.onrender.com/mcp |
 
-To load the live agent into any MCP-compatible runtime, add this to your config:
+Load the live agent into any MCP-compatible runtime:
 
 ```json
 {
@@ -75,9 +92,9 @@ To load the live agent into any MCP-compatible runtime, add this to your config:
 
 Works with Claude Desktop, Claude Code, VS Code, Cursor, and Kiro — no setup required.
 
-## Protocol Stack
+---
 
-ALP, MCP, and SDK are three layers — not competitors:
+## Protocol Stack
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -97,7 +114,9 @@ ALP, MCP, and SDK are three layers — not competitors:
 
 - **MCP** exposes tools only — callable functions the LLM can invoke. No persona, no memory.
 - **SDK** exposes the full agent but is platform-specific.
-- **ALP** describes the whole agent (like SDK) and tells the runtime where to find the MCP-compatible tool endpoints. ALP uses MCP as its tool-call transport.
+- **ALP** describes the whole agent and tells the runtime where to find the MCP-compatible tool endpoints.
+
+---
 
 ## Repositories
 
@@ -105,6 +124,8 @@ ALP, MCP, and SDK are three layers — not competitors:
 |---|---|
 | `agent-load-protocol` (this) | The protocol spec, schema, reference server |
 | [`alp-agent-starter`](https://github.com/RodrigoMvs123/alp-agent-starter) | Hello-world agent implementing ALP |
+
+---
 
 ## Quick Start
 
@@ -132,11 +153,11 @@ Server starts at `http://localhost:8000`.
 
 ### Option A — Proxy an existing agent (v0.5.0, zero code changes)
 
-If your agent already has HTTP tool endpoints, point the ALP card at them:
+Add an `agent.alp.json` pointing at your existing HTTP tool endpoints:
 
 ```json
 {
-  "alp_version": "0.5.0",
+  "alp_version": "0.6.0",
   "id": "my-agent",
   "name": "My Agent",
   "persona": "You are a helpful assistant.",
@@ -183,9 +204,79 @@ Connect to Kiro (`.kiro/settings/mcp.json`):
 
 ---
 
-### Option B — Fork the starter
+### Option B — Remote card from GitHub (v0.6.0, no server to run)
 
-The fastest way to build an ALP-compatible agent from scratch. Fork [alp-agent-starter](https://github.com/RodrigoMvs123/alp-agent-starter), edit `agent.alp.json` with your agent's identity and tools, and run it.
+Add `agent.alp.json` to your GitHub repo. The ALP Server fetches it at startup —
+you never need to run your own server.
+
+Edit the URL in the start command to point at your raw GitHub card:
+
+**macOS / Linux:**
+```bash
+cd reference/server/python
+AGENT_CARD_URL=https://raw.githubusercontent.com/YOUR-ORG/YOUR-REPO/main/agent.alp.json \
+  python alp_server.py
+```
+
+**Windows PowerShell:**
+```powershell
+cd reference\server\python
+$env:AGENT_CARD_URL = "https://raw.githubusercontent.com/YOUR-ORG/YOUR-REPO/main/agent.alp.json"
+python alp_server.py
+```
+
+To refresh the card without restarting:
+```
+GET http://localhost:8000/agent/refresh
+```
+
+---
+
+### Option C — Multi-agent manifest (v0.6.0)
+
+Host multiple agents from one server instance. The manifest file is already
+in the repo at `examples/remote-card/agents.json` — edit it to add your
+agents' raw GitHub card URLs:
+
+```json
+{
+  "_comment": "Replace the placeholder URL with each agent's raw GitHub agent.alp.json URL.",
+  "agents": [
+    "https://raw.githubusercontent.com/YOUR-ORG/YOUR-REPO/main/agent.alp.json"
+  ]
+}
+```
+
+Then start the server pointing at that manifest:
+
+**macOS / Linux:**
+```bash
+cd reference/server/python
+AGENTS_MANIFEST=../../../examples/remote-card/agents.json python alp_server.py
+```
+
+**Windows PowerShell:**
+```powershell
+cd reference\server\python
+$env:AGENTS_MANIFEST = "..\..\..\examples\remote-card\agents.json"; python alp_server.py
+```
+
+Each agent gets its own MCP endpoint automatically — use its `id` field from the card:
+
+```json
+{
+  "mcpServers": {
+    "agent-a": { "url": "http://localhost:8000/mcp/agent-a" },
+    "agent-b": { "url": "http://localhost:8000/mcp/agent-b" }
+  }
+}
+```
+
+---
+
+### Option D — Fork the starter
+
+The fastest way to build an ALP-compatible agent from scratch.
 
 **macOS / Linux:**
 ```bash
@@ -207,41 +298,6 @@ python server.py
 
 ---
 
-### Option C — Build from scratch
-
-1. Create an `agent.alp.json` that validates against the schema:
-
-```json
-{
-  "alp_version": "0.5.0",
-  "id": "my-agent",
-  "name": "My Agent",
-  "persona": "You are a helpful assistant.",
-  "llm": { "provider": "any" },
-  "server": {
-    "url": "https://your-server.com",
-    "transport": "http"
-  }
-}
-```
-
-2. Build a server that exposes `/agent`, `/tools`, `/tools/{name}`, and `/mcp`.
-
-3. At startup, validate against the ALP schema:
-
-```python
-import httpx, jsonschema
-
-SCHEMA_URL = "https://raw.githubusercontent.com/RodrigoMvs123/agent-load-protocol/main/schema/agent.alp.schema.json"
-
-async def validate():
-    async with httpx.AsyncClient() as client:
-        schema = (await client.get(SCHEMA_URL)).json()
-    jsonschema.validate(your_agent_card, schema)
-```
-
----
-
 ### Load into any MCP runtime
 
 ```json
@@ -256,6 +312,8 @@ async def validate():
 
 Works with Kiro, Claude Code, Claude Desktop, Cursor, and any MCP-compatible client.
 
+---
+
 ## Repository Structure
 
 ```
@@ -269,14 +327,16 @@ agent-load-protocol/
 ├── reference/
 │   └── server/
 │       └── python/
-│           ├── alp_server.py        ← Reference server (v0.5.0 — proxy + MCP SSE)
+│           ├── alp_server.py        ← Reference server (v0.6.0)
 │           └── requirements.txt
 ├── examples/
 │   ├── hello-agent/                 ← Minimal starter card
-│   ├── platform-import/             ← Surface 1: exported from Relevance AI / Hive
-│   ├── custom-ui/                   ← Surface 2: powering a custom frontend
-│   └── chat-window/                 ← Surface 3: registered as MCP server
+│   ├── remote-card/                 ← agents.json manifest example (v0.6.0)
+│   ├── platform-import/             ← Exported from Relevance AI / Hive
+│   ├── custom-ui/                   ← Powering a custom frontend
+│   └── chat-window/                 ← Registered as MCP server
 ├── releases/
+│   ├── v0.6.0.md                    ← Remote card loading + multi-agent manifest
 │   ├── v0.5.0.md                    ← Proxy tool execution + MCP SSE transport
 │   ├── v0.4.0.md                    ← /persona, /agents, Node.js server
 │   └── ...
@@ -291,17 +351,22 @@ agent-load-protocol/
         └── validate-schema.yml
 ```
 
+---
+
 ## Releases
 
 | Version | Highlights |
 |---|---|
-| [v0.5.0](releases/v0.5.0.md) | Proxy tool execution, MCP SSE transport (`/mcp`), `httpx` dependency |
+| [v0.6.0](releases/v0.6.0.md) | Remote card loading (`AGENT_CARD_URL`), multi-agent manifest, `/agent/refresh`, `/mcp/{agent_id}` |
+| [v0.5.0](releases/v0.5.0.md) | Proxy tool execution, MCP SSE transport (`/mcp`), `httpx` |
 | [v0.4.0](releases/v0.4.0.md) | `GET /persona`, `GET /agents`, Node.js server, `LOADING.md`, `SECRETS.md`, `deploy/` |
 | [v0.3.0](releases/v0.3.0.md) | Toolsets, security/read-only, dynamic tool discovery, server manifest |
 | [v0.2.2](releases/v0.2.2.md) | Workforce, tool steps, alerts, bulk schedule |
 | [v0.2.1](releases/v0.2.1.md) | Variables, triggers, knowledge, platform origin |
 | [v0.2.0](releases/v0.2.0.md) | Agent types, capabilities, observability, marketplace, auth_ref |
 | [v0.1.0](releases/v0.1.0.md) | Initial release |
+
+---
 
 ## Contributing
 
