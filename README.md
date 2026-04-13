@@ -235,7 +235,7 @@ GET http://localhost:8000/agent/refresh
 ### Option C — Multi-agent manifest (v0.6.0)
 
 Host multiple agents from one server instance. The manifest file is already
-in the repo at `examples/remote-card/agents.json` — edit it to add your
+in the repo at `examples/remote-card/agent.manifest.json` — edit it to add your
 agents' raw GitHub card URLs:
 
 ```json
@@ -252,13 +252,13 @@ Then start the server pointing at that manifest:
 **macOS / Linux:**
 ```bash
 cd reference/server/python
-AGENTS_MANIFEST=../../../examples/remote-card/agents.json python alp_server.py
+AGENTS_MANIFEST=../../../examples/remote-card/agent.manifest.json python alp_server.py
 ```
 
 **Windows PowerShell:**
 ```powershell
 cd reference\server\python
-$env:AGENTS_MANIFEST = "..\..\..\examples\remote-card\agents.json"; python alp_server.py
+$env:AGENTS_MANIFEST = "..\..\..\examples\remote-card\agent.manifest.json"; python alp_server.py
 ```
 
 Each agent gets its own MCP endpoint automatically — use its `id` field from the card:
@@ -331,7 +331,7 @@ agent-load-protocol/
 │           └── requirements.txt
 ├── examples/
 │   ├── hello-agent/                 ← Minimal starter card
-│   ├── remote-card/                 ← agents.json manifest example (v0.6.0)
+│   ├── remote-card/                 ← agent.manifest.json manifest example (v0.6.0)
 │   ├── platform-import/             ← Exported from Relevance AI / Hive
 │   ├── custom-ui/                   ← Powering a custom frontend
 │   └── chat-window/                 ← Registered as MCP server
