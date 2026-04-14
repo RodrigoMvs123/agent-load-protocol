@@ -65,6 +65,17 @@ Hosted ALP Server
   └── proxies tool calls to your endpoints
 ```
 
+### v0.7.0 — Library mode
+
+Already have a FastAPI or Flask server? Add ALP in 3 lines — no separate process:
+
+```python
+from alp import ALPRouter          # pip install alp-server
+
+alp = ALPRouter(card_path="agent.alp.json")
+app.include_router(alp.router)     # adds /mcp, /agent, /tools, /health
+```
+
 ---
 
 ## Live Demo
@@ -122,14 +133,58 @@ Works with Claude Desktop, Claude Code, VS Code, Cursor, and Kiro — no setup r
 
 | Repo | Purpose |
 |---|---|
-| `agent-load-protocol` (this) | The protocol spec, schema, reference server |
+| `agent-load-protocol` (this) | The protocol spec, schema, reference server, pip library |
 | [`alp-agent-starter`](https://github.com/RodrigoMvs123/alp-agent-starter) | Hello-world agent implementing ALP |
 
 ---
 
 ## Quick Start
 
-### Run locally
+### Option A — pip install (v0.7.0, drop into any existing server)
+
+```bash
+pip install alp-server
+```
+
+**FastAPI — 3 lines:**
+
+```python
+from fastapi import FastAPI
+from alp import ALPRouter
+
+app = FastAPI()
+alp = ALPRouter(card_path="agent.alp.json")
+app.include_router(alp.router)
+```
+
+**Flask — 3 lines:**
+
+```python
+from flask import Flask
+from alp.flask import ALPBlueprint
+
+app = Flask(__name__)
+alp = ALPBlueprint(card_path="agent.alp.json")
+app.register_blueprint(alp.blueprint)
+```
+
+**Custom tool registration:**
+
+```python
+alp = ALPRouter(card_path="agent.alp.json")
+
+@alp.tool("greet")
+async def greet(input_data: dict) -> dict:
+    return {"message": f"Hello, {input_data.get('name', 'stranger')}!"}
+
+app.include_router(alp.router)
+```
+
+See `alp-server/` for the full library source and `alp-server/README.md` for docs.
+
+---
+
+### Option B — Run the reference server locally
 
 **macOS / Linux:**
 ```bash
@@ -151,13 +206,13 @@ Server starts at `http://localhost:8000`.
 
 ---
 
-### Option A — Proxy an existing agent (v0.5.0, zero code changes)
+### Option C — Proxy an existing agent (v0.5.0, zero code changes)
 
 Add an `agent.alp.json` pointing at your existing HTTP tool endpoints:
 
 ```json
 {
-  "alp_version": "0.6.0",
+  "alp_version": "0.7.0",
   "id": "my-agent",
   "name": "My Agent",
   "persona": "You are a helpful assistant.",
@@ -204,12 +259,9 @@ Connect to Kiro (`.kiro/settings/mcp.json`):
 
 ---
 
-### Option B — Remote card from GitHub (v0.6.0, no server to run)
+### Option D — Remote card from GitHub (v0.6.0)
 
-Add `agent.alp.json` to your GitHub repo. The ALP Server fetches it at startup —
-you never need to run your own server.
-
-Edit the URL in the start command to point at your raw GitHub card:
+Add `agent.alp.json` to your GitHub repo. Point the ALP Server at your raw GitHub URL:
 
 **macOS / Linux:**
 ```bash
@@ -232,22 +284,18 @@ GET http://localhost:8000/agent/refresh
 
 ---
 
-### Option C — Multi-agent manifest (v0.6.0)
+### Option E — Multi-agent manifest (v0.6.0)
 
-Host multiple agents from one server instance. The manifest file is already
-in the repo at `examples/remote-card/agent.manifest.json` — edit it to add your
-agents' raw GitHub card URLs:
+Host multiple agents from one server instance. Edit `examples/remote-card/agent.manifest.json`:
 
 ```json
 {
-  "_comment": "Replace the placeholder URL with each agent's raw GitHub agent.alp.json URL.",
+  "_comment": "Replace with each agent's raw GitHub agent.alp.json URL.",
   "agents": [
     "https://raw.githubusercontent.com/YOUR-ORG/YOUR-REPO/main/agent.alp.json"
   ]
 }
 ```
-
-Then start the server pointing at that manifest:
 
 **macOS / Linux:**
 ```bash
@@ -261,7 +309,7 @@ cd reference\server\python
 $env:AGENTS_MANIFEST = "..\..\..\examples\remote-card\agent.manifest.json"; python alp_server.py
 ```
 
-Each agent gets its own MCP endpoint automatically — use its `id` field from the card:
+Each agent gets its own MCP endpoint automatically:
 
 ```json
 {
@@ -274,7 +322,7 @@ Each agent gets its own MCP endpoint automatically — use its `id` field from t
 
 ---
 
-### Option D — Fork the starter
+### Option F — Fork the starter
 
 The fastest way to build an ALP-compatible agent from scratch.
 
@@ -298,7 +346,7 @@ python server.py
 
 ---
 
-### Load into any MCP runtime
+### Connect to any MCP runtime
 
 ```json
 {
@@ -322,20 +370,32 @@ agent-load-protocol/
 ├── LOADING.md                       ← How to load an agent into any runtime
 ├── SECRETS.md                       ← API key placement guide
 ├── render.yaml                      ← Render deploy config
+├── alp-server/                      ← pip install alp-server (v0.7.0)
+│   ├── alp/
+│   │   ├── __init__.py              ← ALPRouter export
+│   │   ├── card.py                  ← Card loader (local + remote)
+│   │   ├── tools.py                 ← Tool registry + proxy executor
+│   │   ├── mcp.py                   ← MCP JSON-RPC handler
+│   │   ├── sse.py                   ← SSE transport layer
+│   │   ├── fastapi.py               ← FastAPI router
+│   │   └── flask.py                 ← Flask blueprint
+│   ├── pyproject.toml
+│   └── README.md
 ├── schema/
 │   └── agent.alp.schema.json        ← Agent Card JSON schema
 ├── reference/
 │   └── server/
 │       └── python/
-│           ├── alp_server.py        ← Reference server (v0.6.0)
+│           ├── alp_server.py        ← Standalone reference server (v0.6.0)
 │           └── requirements.txt
 ├── examples/
 │   ├── hello-agent/                 ← Minimal starter card
-│   ├── remote-card/                 ← agent.manifest.json manifest example (v0.6.0)
+│   ├── remote-card/                 ← agent.manifest.json example (v0.6.0)
 │   ├── platform-import/             ← Exported from Relevance AI / Hive
 │   ├── custom-ui/                   ← Powering a custom frontend
 │   └── chat-window/                 ← Registered as MCP server
 ├── releases/
+│   ├── v0.7.0.md                    ← pip library — ALPRouter + ALPBlueprint
 │   ├── v0.6.0.md                    ← Remote card loading + multi-agent manifest
 │   ├── v0.5.0.md                    ← Proxy tool execution + MCP SSE transport
 │   ├── v0.4.0.md                    ← /persona, /agents, Node.js server
@@ -357,6 +417,7 @@ agent-load-protocol/
 
 | Version | Highlights |
 |---|---|
+| [v0.7.0](releases/v0.7.0.md) | `pip install alp-server` — `ALPRouter` (FastAPI) + `ALPBlueprint` (Flask) + `@alp.tool()` |
 | [v0.6.0](releases/v0.6.0.md) | Remote card loading (`AGENT_CARD_URL`), multi-agent manifest, `/agent/refresh`, `/mcp/{agent_id}` |
 | [v0.5.0](releases/v0.5.0.md) | Proxy tool execution, MCP SSE transport (`/mcp`), `httpx` |
 | [v0.4.0](releases/v0.4.0.md) | `GET /persona`, `GET /agents`, Node.js server, `LOADING.md`, `SECRETS.md`, `deploy/` |

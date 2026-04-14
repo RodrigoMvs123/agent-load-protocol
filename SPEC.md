@@ -1,5 +1,5 @@
 # Agent Load Protocol (ALP) Specification
-Version: 0.6.0
+Version: 0.7.0
 
 > For the history of what changed in each version, see [releases/](releases/).
 
@@ -25,6 +25,7 @@ What MCP (Model Context Protocol) is to tools, ALP is to entire agents.
 | Tool Endpoint | An MCP-compatible HTTP endpoint exposing a callable function |
 | Proxy Tool | A tool whose endpoint is a full URL — the ALP Server forwards the call (v0.5.0) |
 | Remote Card | An Agent Card loaded from a public URL at startup (v0.6.0) |
+| ALP Library | `pip install alp-server` — drop-in middleware for any Python server (v0.7.0) |
 | Auth Ref | A string name referencing a credential — never the actual secret |
 
 ---
@@ -37,7 +38,7 @@ The Agent Card is the central artifact of ALP. It is a JSON file that fully desc
 
 ```json
 {
-  "alp_version": "0.6.0",
+  "alp_version": "0.7.0",
   "id": "my-agent",
   "name": "My Agent",
   "persona": "You are a helpful assistant.",
@@ -96,7 +97,7 @@ An ALP Server MUST expose:
 | `/persona` | GET | ✅ | Returns `{"persona": "...", "id": "...", "name": "..."}` |
 | `/tools` | GET | ✅ | Returns `{"tools": [...]}` |
 | `/tools/{name}` | POST | ✅ | Executes a tool — local or proxied (v0.5.0) |
-| `/health` | GET | ✅ | Returns `{"status": "ok", "alp_version": "0.6.0"}` |
+| `/health` | GET | ✅ | Returns `{"status": "ok", "alp_version": "0.7.0"}` |
 | `/agents` | GET | — | Returns all cards hosted by this server (v0.4.0 + v0.6.0) |
 | `/mcp` | GET | — | MCP SSE stream — primary agent (v0.5.0) |
 | `/mcp` | POST | — | MCP JSON-RPC receiver — primary agent (v0.5.0) |
@@ -210,7 +211,7 @@ Re-fetches the card from `AGENT_CARD_URL` without restarting the server:
   "refreshed": true,
   "id": "my-agent",
   "name": "My Agent",
-  "alp_version": "0.6.0",
+  "alp_version": "0.7.0",
   "source": "https://raw.githubusercontent.com/..."
 }
 ```
@@ -220,13 +221,13 @@ Re-fetches the card from `AGENT_CARD_URL` without restarting the server:
 ## 7. Multi-Agent Manifest (v0.6.0)
 
 A single ALP Server instance can host multiple agents via `AGENTS_MANIFEST` —
-a JSON file listing public card URLs.
+a JSON file listing public card URLs. See `examples/remote-card/agent.manifest.json`.
 
 ```json
 {
+  "_comment": "Replace with each agent's raw GitHub agent.alp.json URL.",
   "agents": [
-    "https://raw.githubusercontent.com/org-a/repo/main/agent.alp.json",
-    "https://raw.githubusercontent.com/org-b/repo/main/agent.alp.json"
+    "https://raw.githubusercontent.com/YOUR-ORG/YOUR-REPO/main/agent.alp.json"
   ]
 }
 ```
@@ -251,7 +252,57 @@ Kiro multi-agent config:
 
 ---
 
-## 8. ALP Client Contract
+## 8. ALP as a Middleware Library (v0.7.0)
+
+The ALP SSE + MCP transport layer is available as an installable Python library.
+Any existing FastAPI or Flask server adds full MCP/Kiro connectivity in 3 lines.
+
+```bash
+pip install alp-server
+```
+
+### FastAPI
+
+```python
+from fastapi import FastAPI
+from alp import ALPRouter
+
+app = FastAPI()
+alp = ALPRouter(card_path="agent.alp.json")
+app.include_router(alp.router)
+```
+
+### Flask
+
+```python
+from flask import Flask
+from alp.flask import ALPBlueprint
+
+app = Flask(__name__)
+alp = ALPBlueprint(card_path="agent.alp.json")
+app.register_blueprint(alp.blueprint)
+```
+
+### `@alp.tool()` decorator
+
+Register local Python functions as tool handlers:
+
+```python
+@alp.tool("search")
+async def search(input_data: dict) -> dict:
+    return {"results": my_search(input_data["query"])}
+```
+
+**Tool resolution order:**
+1. Registered Python function (`@alp.tool()`)
+2. Full URL endpoint → proxied via HTTP (v0.5.0)
+3. Relative endpoint → stub response
+
+See `alp-server/` in this repo for the full library source.
+
+---
+
+## 9. ALP Client Contract
 
 An ALP Client MUST:
 
@@ -264,7 +315,7 @@ An ALP Client MUST:
 
 ---
 
-## 9. Security
+## 10. Security
 
 - API keys and secrets MUST NOT appear in the Agent Card
 - Secrets live in environment variables on the ALP Server only
@@ -274,7 +325,7 @@ An ALP Client MUST:
 
 ---
 
-## 10. LLM Agnosticism
+## 11. LLM Agnosticism
 
 ALP does not prescribe an LLM. The `llm` field is a preference, not a requirement. The ALP Client resolves the final LLM based on:
 
@@ -284,7 +335,7 @@ ALP does not prescribe an LLM. The `llm` field is a preference, not a requiremen
 
 ---
 
-## 11. Relation to MCP
+## 12. Relation to MCP
 
 ALP is MCP-compatible at the tool layer. Tool endpoints follow MCP conventions so any MCP-compatible host can call ALP tools. ALP extends MCP by adding the Agent Card layer: identity, persona, memory, and LLM routing.
 
@@ -297,17 +348,18 @@ ALP  —  agent.alp.json  (identity · persona · tools · memory · llm)
 
 ---
 
-## 12. Versioning
+## 13. Versioning
 
-ALP follows semantic versioning. The `alp_version` field in the Agent Card must match a published ALP version. All releases are backward-compatible — a v0.1.0 card is valid in any v0.6.0 runtime.
+ALP follows semantic versioning. The `alp_version` field in the Agent Card must match a published ALP version. All releases are backward-compatible — a v0.1.0 card is valid in any v0.7.0 runtime.
 
 See [releases/](releases/) for the full changelog.
 
 ---
 
-## 13. Reference Implementations
+## 14. Reference Implementations
 
-| Language | Path |
+| Path | Description |
 |---|---|
-| Python | `reference/server/python/alp_server.py` |
-| Node.js / TypeScript | `reference/server/node/alp_server.ts` |
+| `reference/server/python/alp_server.py` | Standalone reference server (Python) |
+| `reference/server/node/alp_server.ts` | Standalone reference server (Node.js / TypeScript) |
+| `alp-server/` | `pip install alp-server` — drop-in middleware library (v0.7.0) |
