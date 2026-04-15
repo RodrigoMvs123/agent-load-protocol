@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "alp-server"
-version = "0.7.0"
+version = "0.7.1"
 description = "Agent Load Protocol — drop-in MCP/SSE middleware for any Python server"
 readme = "README.md"
 license = { text = "MIT" }
