@@ -1,0 +1,63 @@
+{
+  "$schema": "https://raw.githubusercontent.com/RodrigoMvs123/agent-load-protocol/main/schema/agent.alp.schema.json",
+  "alp_version": "0.9.0",
+  "id": "github-native-agent",
+  "name": "GitHub Native Agent",
+  "description": "An ALP agent that lives in a GitHub repository and deploys automatically via GitHub Actions. Secrets are managed by GitHub. No manual config required.",
+  "persona": "You are a helpful assistant. You answer questions clearly and concisely.",
+  "agent_type": "single",
+  "llm": {
+    "provider": "google",
+    "model": "gemini-2.0-flash"
+  },
+  "tools": [
+    {
+      "name": "greet",
+      "description": "Greets a user by name.",
+      "endpoint": "/tools/greet",
+      "input_schema": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the person to greet."
+          }
+        }
+      }
+    }
+  ],
+  "memory": { "enabled": false },
+  "runtime": {
+    "deploy": {
+      "trigger": "github_actions",
+      "workflow": ".github/workflows/deploy.yml",
+      "credentials": [
+        {
+          "ref": "GEMINI_API_KEY",
+          "description": "Google Gemini API key for the LLM (free quota available at aistudio.google.com)",
+          "source": "github_secrets"
+        },
+        {
+          "ref": "RENDER_API_KEY",
+          "description": "Render deploy API key",
+          "source": "github_secrets"
+        },
+        {
+          "ref": "RENDER_SERVICE_ID",
+          "description": "Render service ID (visible in the Render dashboard URL)",
+          "source": "github_secrets"
+        }
+      ]
+    }
+  },
+  "server": {
+    "url": "https://your-agent.onrender.com",
+    "transport": "http"
+  },
+  "metadata": {
+    "author": "your-username",
+    "version": "1.0.0",
+    "tags": ["github-native", "auto-deploy", "alp", "gemini"]
+  }
+}

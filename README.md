@@ -140,7 +140,24 @@ Works with Claude Desktop, Claude Code, VS Code, Cursor, and Kiro — no setup r
 
 ## Quick Start
 
-### Option A — pip install (v0.7.0, drop into any existing server)
+### Option A — GitHub-native agent (automatic, recommended for new agents)
+
+The fastest path from zero to a live agent: your agent lives in a GitHub repo, secrets stay in GitHub, deployment is automatic via GitHub Actions.
+
+**Requirements:** GitHub account, Google Gemini API key (free at [aistudio.google.com](https://aistudio.google.com)), Render account (free tier)
+
+1. Fork or copy `examples/github-native-agent/` into a new GitHub repo
+2. Add `GEMINI_API_KEY`, `RENDER_API_KEY`, and `RENDER_SERVICE_ID` as GitHub Secrets
+   (repo → Settings → Secrets and variables → Actions)
+3. Edit `agent.alp.json` — update `id`, `name`, `persona`, and `server.url`
+4. Push to main — the deploy workflow triggers automatically
+5. Open Kiro, connect GitHub MCP (one-time OAuth)
+6. Say: `"Load my agent from github.com/YOUR-USERNAME/YOUR-REPO"`
+7. Agent is live in Kiro
+
+See `examples/github-native-agent/README.md` for the full step-by-step guide.
+
+### Option B — pip install (v0.7.0, drop into any existing server)
 
 ```bash
 pip install alp-server
@@ -203,8 +220,6 @@ $env:AGENT_CARD_PATH = "..\..\..\examples\hello-agent\agent.alp.json"; python al
 ```
 
 Server starts at `http://localhost:8000`.
-
----
 
 ### Option C — Proxy an existing agent (v0.5.0, zero code changes)
 
@@ -417,6 +432,7 @@ agent-load-protocol/
 
 | Version | Highlights |
 |---|---|
+| [v0.9.0](releases/v0.9.0.md) | GitHub-native agent: load from repo, secrets via GitHub Actions, auto-deploy to Render, Gemini LLM |
 | [v0.7.0](releases/v0.7.0.md) | `pip install alp-server` — `ALPRouter` (FastAPI) + `ALPBlueprint` (Flask) + `@alp.tool()` |
 | [v0.6.0](releases/v0.6.0.md) | Remote card loading (`AGENT_CARD_URL`), multi-agent manifest, `/agent/refresh`, `/mcp/{agent_id}` |
 | [v0.5.0](releases/v0.5.0.md) | Proxy tool execution, MCP SSE transport (`/mcp`), `httpx` |

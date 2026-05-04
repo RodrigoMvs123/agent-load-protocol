@@ -549,6 +549,52 @@
         }
       }
     },
+    "runtime": {
+      "type": "object",
+      "description": "Runtime deployment configuration. New in v0.9.0.",
+      "properties": {
+        "deploy": {
+          "type": "object",
+          "description": "Deployment trigger and credential declaration.",
+          "properties": {
+            "trigger": {
+              "type": "string",
+              "enum": ["github_actions", "manual", "none"],
+              "default": "none",
+              "description": "How the agent is deployed. github_actions: triggered via workflow_dispatch."
+            },
+            "workflow": {
+              "type": "string",
+              "description": "Path to the GitHub Actions workflow file in the agent repo.",
+              "example": ".github/workflows/deploy.yml"
+            },
+            "credentials": {
+              "type": "array",
+              "description": "Credentials the agent requires. Values are NEVER stored here — only references.",
+              "items": {
+                "type": "object",
+                "required": ["ref", "source"],
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "description": "The name of the secret (e.g. GEMINI_API_KEY)."
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Human-readable description of what this credential is for."
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": ["github_secrets", "user_supplied", "oidc"],
+                    "description": "Where the credential comes from. github_secrets: GitHub repo secrets injected by Actions."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "server": {
       "type": "object",
       "required": [

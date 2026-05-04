@@ -288,6 +288,38 @@ schema = {
         "concurrency": {"type": "integer", "minimum": 1, "default": 1}
       }
     },
+    "runtime": {
+      "type": "object",
+      "description": "Runtime deployment configuration. New in v0.9.0.",
+      "properties": {
+        "deploy": {
+          "type": "object",
+          "properties": {
+            "trigger": {
+              "type": "string",
+              "enum": ["github_actions", "manual", "none"],
+              "default": "none"
+            },
+            "workflow": {"type": "string"},
+            "credentials": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["ref", "source"],
+                "properties": {
+                  "ref": {"type": "string"},
+                  "description": {"type": "string"},
+                  "source": {
+                    "type": "string",
+                    "enum": ["github_secrets", "user_supplied", "oidc"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "server": {
       "type": "object",
       "required": ["url", "transport"],

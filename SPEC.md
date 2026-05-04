@@ -75,6 +75,7 @@ The Agent Card is the central artifact of ALP. It is a JSON file that fully desc
 | `workforce` | — | 0.2.2 | Multi-agent role + connections |
 | `alerts` | — | 0.2.2 | Notification / escalation rules |
 | `bulk_schedule` | — | 0.2.2 | Bulk run configuration |
+| `runtime` | — | 0.9.0 | GitHub-native deploy config (`trigger`, `workflow`, `credentials`) |
 | `toolsets` | — | 0.3.0 | Named tool groups |
 | `tools_discovery` | — | 0.3.0 | Dynamic tool discovery config |
 | `pagination` | — | 0.3.0 | Default pagination settings |
