@@ -134,7 +134,7 @@ Works with Claude Desktop, Claude Code, VS Code, Cursor, and Kiro — no setup r
 | Repo | Purpose |
 |---|---|
 | `agent-load-protocol` (this) | The protocol spec, schema, reference server, pip library |
-| [`alp-agent-starter`](https://github.com/RodrigoMvs123/alp-agent-starter) | Hello-world agent implementing ALP |
+| [`hello-agent-alp-kiro`](https://github.com/RodrigoMvs123/hello-agent-alp-kiro) | Hello-world agent implementing ALP |
 
 ---
 
@@ -343,8 +343,8 @@ The fastest way to build an ALP-compatible agent from scratch.
 
 **macOS / Linux:**
 ```bash
-git clone https://github.com/YOUR-USERNAME/alp-agent-starter
-cd alp-agent-starter
+git clone https://github.com/YOUR-USERNAME/hello-agent-alp-kiro
+cd hello-agent-alp-kiro
 pip install -r requirements.txt
 cp .env.example .env
 python server.py
@@ -352,8 +352,8 @@ python server.py
 
 **Windows PowerShell:**
 ```powershell
-git clone https://github.com/YOUR-USERNAME/alp-agent-starter
-cd alp-agent-starter
+git clone https://github.com/YOUR-USERNAME/hello-agent-alp-kiro
+cd hello-agent-alp-kiro
 python -m pip install -r requirements.txt
 Copy-Item .env.example .env
 python server.py
