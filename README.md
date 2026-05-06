@@ -37,45 +37,6 @@ Any runtime that speaks ALP can load any agent that ships an Agent Card.
   Any runtime           ← Kiro, Claude Code, Claude Desktop, Cursor, VS Code
 ```
 
-### v0.5.0 — Proxy mode
-
-If your agent already has HTTP tool endpoints, the ALP Server forwards calls automatically. No MCP or SSE code needed in your agent:
-
-```
-Kiro / Claude Code
-        ↓  tools/call via MCP SSE
-  ALP Server
-        ↓  POST https://your-existing-server.com/api/your-tool
-  Your existing agent   ← zero code changes
-        ↓  returns result
-  Kiro / Claude Code
-```
-
-### v0.6.0 — Remote card mode
-
-Ship an `agent.alp.json` in your GitHub repo. Point one hosted ALP Server at it. Your agent is live in Kiro — you never run a server:
-
-```
-Your GitHub repo
-  └── agent.alp.json    ← you own this, one file
-
-Hosted ALP Server
-  └── reads card from GitHub URL
-  └── exposes /mcp for Kiro
-  └── proxies tool calls to your endpoints
-```
-
-### v0.7.0 — Library mode
-
-Already have a FastAPI or Flask server? Add ALP in 3 lines — no separate process:
-
-```python
-from alp import ALPRouter          # pip install alp-server
-
-alp = ALPRouter(card_path="agent.alp.json")
-app.include_router(alp.router)     # adds /mcp, /agent, /tools, /health
-```
-
 ---
 
 ## Live Demo
@@ -133,7 +94,7 @@ Works with Claude Desktop, Claude Code, VS Code, Cursor, and Kiro — no setup r
 
 | Repo | Purpose |
 |---|---|
-| `agent-load-protocol` (this) | The protocol spec, schema, reference server, pip library |
+| `agent-load-protocol` (this) | The protocol spec, schema, reference server |
 | [`hello-agent-alp-kiro`](https://github.com/RodrigoMvs123/hello-agent-alp-kiro) | Hello-world agent implementing ALP |
 
 ---
@@ -157,7 +118,7 @@ The fastest path from zero to a live agent: your agent lives in a GitHub repo, s
 
 See `examples/github-native-agent/README.md` for the full step-by-step guide.
 
-### Option B — pip install (v0.7.0, drop into any existing server)
+### Option B — pip install (drop into any existing server)
 
 ```bash
 pip install alp-server
@@ -197,11 +158,7 @@ async def greet(input_data: dict) -> dict:
 app.include_router(alp.router)
 ```
 
-See `alp-server/` for the full library source and `alp-server/README.md` for docs.
-
----
-
-### Option B — Run the reference server locally
+### Option C — Run the reference server locally
 
 **macOS / Linux:**
 ```bash
@@ -221,13 +178,13 @@ $env:AGENT_CARD_PATH = "..\..\..\examples\hello-agent\agent.alp.json"; python al
 
 Server starts at `http://localhost:8000`.
 
-### Option C — Proxy an existing agent (v0.5.0, zero code changes)
+### Option D — Proxy an existing agent (zero code changes)
 
 Add an `agent.alp.json` pointing at your existing HTTP tool endpoints:
 
 ```json
 {
-  "alp_version": "0.7.0",
+  "alp_version": "0.9.0",
   "id": "my-agent",
   "name": "My Agent",
   "persona": "You are a helpful assistant.",
@@ -272,9 +229,7 @@ Connect to Kiro (`.kiro/settings/mcp.json`):
 
 **Your existing agent: zero code changes.**
 
----
-
-### Option D — Remote card from GitHub (v0.6.0)
+### Option E — Remote card from GitHub
 
 Add `agent.alp.json` to your GitHub repo. Point the ALP Server at your raw GitHub URL:
 
@@ -297,9 +252,7 @@ To refresh the card without restarting:
 GET http://localhost:8000/agent/refresh
 ```
 
----
-
-### Option E — Multi-agent manifest (v0.6.0)
+### Option F — Multi-agent manifest
 
 Host multiple agents from one server instance. Edit `examples/remote-card/agent.manifest.json`:
 
@@ -335,13 +288,8 @@ Each agent gets its own MCP endpoint automatically:
 }
 ```
 
----
+### Option G — Fork the starter
 
-### Option F — Fork the starter
-
-The fastest way to build an ALP-compatible agent from scratch.
-
-**macOS / Linux:**
 ```bash
 git clone https://github.com/YOUR-USERNAME/hello-agent-alp-kiro
 cd hello-agent-alp-kiro
@@ -384,36 +332,32 @@ agent-load-protocol/
 ├── SPEC.md                          ← The protocol specification
 ├── LOADING.md                       ← How to load an agent into any runtime
 ├── SECRETS.md                       ← API key placement guide
-├── render.yaml                      ← Render deploy config
-├── alp-server/                      ← pip install alp-server (v0.7.0)
-│   ├── alp/
-│   │   ├── __init__.py              ← ALPRouter export
-│   │   ├── card.py                  ← Card loader (local + remote)
-│   │   ├── tools.py                 ← Tool registry + proxy executor
-│   │   ├── mcp.py                   ← MCP JSON-RPC handler
-│   │   ├── sse.py                   ← SSE transport layer
-│   │   ├── fastapi.py               ← FastAPI router
-│   │   └── flask.py                 ← Flask blueprint
-│   ├── pyproject.toml
-│   └── README.md
+├── render.yaml                      ← Render deploy config (root — required by Render)
 ├── schema/
 │   └── agent.alp.schema.json        ← Agent Card JSON schema
 ├── reference/
 │   └── server/
-│       └── python/
-│           ├── alp_server.py        ← Standalone reference server (v0.6.0)
-│           └── requirements.txt
+│       ├── python/
+│       │   ├── alp_server.py        ← Reference server (/agent /persona /tools /agents /mcp)
+│       │   └── requirements.txt
+│       └── node/
+│           ├── alp_server.ts        ← Node.js / TypeScript reference server
+│           └── package.json
 ├── examples/
 │   ├── hello-agent/                 ← Minimal starter card
-│   ├── remote-card/                 ← agent.manifest.json example (v0.6.0)
+│   ├── github-native-agent/         ← GitHub-native pattern (v0.9.0)
 │   ├── platform-import/             ← Exported from Relevance AI / Hive
 │   ├── custom-ui/                   ← Powering a custom frontend
-│   └── chat-window/                 ← Registered as MCP server
+│   ├── chat-window/                 ← Registered as MCP server in Claude / VS Code
+│   ├── hive-agent/                  ← Hive swarm agent example
+│   ├── relevance-ai-agent/          ← Relevance AI coding agent example
+│   └── remote-card/                 ← agent.manifest.json multi-agent example
 ├── releases/
-│   ├── v0.7.0.md                    ← pip library — ALPRouter + ALPBlueprint
-│   ├── v0.6.0.md                    ← Remote card loading + multi-agent manifest
-│   ├── v0.5.0.md                    ← Proxy tool execution + MCP SSE transport
-│   ├── v0.4.0.md                    ← /persona, /agents, Node.js server
+│   ├── v0.9.0.md
+│   ├── v0.7.0.md
+│   ├── v0.6.0.md
+│   ├── v0.5.0.md
+│   ├── v0.4.0.md
 │   └── ...
 ├── deploy/
 │   ├── railway.json
