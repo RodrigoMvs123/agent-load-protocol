@@ -1,5 +1,5 @@
 # Agent Load Protocol (ALP) Specification
-Version: 0.7.0
+Version: 0.9.0
 
 > For the history of what changed in each version, see [releases/](releases/).
 
@@ -38,7 +38,7 @@ The Agent Card is the central artifact of ALP. It is a JSON file that fully desc
 
 ```json
 {
-  "alp_version": "0.7.0",
+  "alp_version": "0.9.0",
   "id": "my-agent",
   "name": "My Agent",
   "persona": "You are a helpful assistant.",
@@ -98,7 +98,7 @@ An ALP Server MUST expose:
 | `/persona` | GET | ✅ | Returns `{"persona": "...", "id": "...", "name": "..."}` |
 | `/tools` | GET | ✅ | Returns `{"tools": [...]}` |
 | `/tools/{name}` | POST | ✅ | Executes a tool — local or proxied (v0.5.0) |
-| `/health` | GET | ✅ | Returns `{"status": "ok", "alp_version": "0.7.0"}` |
+| `/health` | GET | ✅ | Returns `{"status": "ok", "alp_version": "0.9.0"}` |
 | `/agents` | GET | — | Returns all cards hosted by this server (v0.4.0 + v0.6.0) |
 | `/mcp` | GET | — | MCP SSE stream — primary agent (v0.5.0) |
 | `/mcp` | POST | — | MCP JSON-RPC receiver — primary agent (v0.5.0) |
@@ -212,7 +212,7 @@ Re-fetches the card from `AGENT_CARD_URL` without restarting the server:
   "refreshed": true,
   "id": "my-agent",
   "name": "My Agent",
-  "alp_version": "0.7.0",
+  "alp_version": "0.9.0",
   "source": "https://raw.githubusercontent.com/..."
 }
 ```
@@ -303,7 +303,69 @@ See `alp-server/` in this repo for the full library source.
 
 ---
 
-## 9. ALP Client Contract
+## 9. GitHub-Native Agent Pattern (v0.9.0)
+
+ALP agents can live entirely in a GitHub repository and load automatically
+into Kiro — with secrets managed by GitHub, deployment triggered by GitHub
+Actions, and authentication handled by GitHub OAuth.
+
+No manual server setup. No exposed API keys. One prompt to load.
+
+### How it works
+
+```
+User in Kiro: "load my agent from github.com/user/my-agent-repo"
+    ↓
+GitHub MCP: get_file_contents → reads agent.alp.json from repo
+    ↓
+Kiro reads card, sees runtime.deploy block
+    ↓
+User authenticates with GitHub (OAuth — one time)
+    ↓
+GitHub MCP: workflow_dispatch → triggers deploy.yml in agent repo
+    ↓
+GitHub Actions: checks out repo, injects GitHub Secrets, deploys to Render
+    ↓
+Kiro reads live URL, connects to /mcp
+    ↓
+User chats with their agent
+```
+
+### `runtime.deploy` block
+
+Declared in the Agent Card. Tells the runtime how to deploy and what
+credentials are required. Secret values never appear in the card.
+
+```json
+"runtime": {
+  "deploy": {
+    "trigger": "github_actions",
+    "workflow": ".github/workflows/deploy.yml",
+    "credentials": [
+      {
+        "ref": "GEMINI_API_KEY",
+        "description": "Google Gemini API key (free quota at aistudio.google.com)",
+        "source": "github_secrets"
+      },
+      {
+        "ref": "RENDER_API_KEY",
+        "description": "Render deploy API key",
+        "source": "github_secrets"
+      }
+    ]
+  }
+}
+```
+
+`trigger` values: `github_actions`, `manual`, `none`.
+`source` values: `github_secrets`, `user_supplied`, `oidc`.
+
+See `examples/github-native-agent/` for the full working example and
+step-by-step setup guide.
+
+---
+
+## 10. ALP Client Contract
 
 An ALP Client MUST:
 
@@ -316,7 +378,7 @@ An ALP Client MUST:
 
 ---
 
-## 10. Security
+## 11. Security
 
 - API keys and secrets MUST NOT appear in the Agent Card
 - Secrets live in environment variables on the ALP Server only
@@ -326,7 +388,7 @@ An ALP Client MUST:
 
 ---
 
-## 11. LLM Agnosticism
+## 12. LLM Agnosticism
 
 ALP does not prescribe an LLM. The `llm` field is a preference, not a requirement. The ALP Client resolves the final LLM based on:
 
@@ -336,7 +398,7 @@ ALP does not prescribe an LLM. The `llm` field is a preference, not a requiremen
 
 ---
 
-## 12. Relation to MCP
+## 13. Relation to MCP
 
 ALP is MCP-compatible at the tool layer. Tool endpoints follow MCP conventions so any MCP-compatible host can call ALP tools. ALP extends MCP by adding the Agent Card layer: identity, persona, memory, and LLM routing.
 
@@ -349,18 +411,17 @@ ALP  —  agent.alp.json  (identity · persona · tools · memory · llm)
 
 ---
 
-## 13. Versioning
+## 14. Versioning
 
-ALP follows semantic versioning. The `alp_version` field in the Agent Card must match a published ALP version. All releases are backward-compatible — a v0.1.0 card is valid in any v0.7.0 runtime.
+ALP follows semantic versioning. The `alp_version` field in the Agent Card must match a published ALP version. All releases are backward-compatible — a v0.1.0 card is valid in any v0.9.0 runtime.
 
 See [releases/](releases/) for the full changelog.
 
 ---
 
-## 14. Reference Implementations
+## 15. Reference Implementations
 
 | Path | Description |
 |---|---|
 | `reference/server/python/alp_server.py` | Standalone reference server (Python) |
 | `reference/server/node/alp_server.ts` | Standalone reference server (Node.js / TypeScript) |
-| `alp-server/` | `pip install alp-server` — drop-in middleware library (v0.7.0) |
