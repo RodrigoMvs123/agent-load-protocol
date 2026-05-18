@@ -14,7 +14,7 @@ Three one-click options. Pick the one you already have an account on.
 4. Add environment variables in the Railway dashboard (Settings → Variables):
    ```
    AGENT_CARD_PATH=examples/hello-agent/agent.alp.json
-   OPENAI_API_KEY=sk-...
+   GEMINI_API_KEY=...
    ```
 5. Railway assigns a public URL: `https://your-app.railway.app`
 
@@ -32,7 +32,7 @@ curl -L https://fly.io/install.sh | sh
 fly launch --config deploy/fly.toml
 
 # Set secrets (never commit these)
-fly secrets set OPENAI_API_KEY=sk-... AGENT_CARD_PATH=examples/hello-agent/agent.alp.json
+fly secrets set GEMINI_API_KEY=... AGENT_CARD_PATH=examples/hello-agent/agent.alp.json
 
 fly deploy
 ```
@@ -48,8 +48,9 @@ Your agent is live at `https://your-alp-agent.fly.dev`.
 3. Render reads `render.yaml` from the **repo root** automatically
 4. Add secret env vars in the Render dashboard (Environment tab):
    ```
-   OPENAI_API_KEY=sk-...
-   ANTHROPIC_API_KEY=sk-ant-...
+   GEMINI_API_KEY=...
+   RENDER_API_KEY=...
+   RENDER_SERVICE_ID=...
    ```
 5. Click **Deploy**. Your agent is live at `https://alp-agent.onrender.com`.
 
@@ -59,7 +60,7 @@ Your agent is live at `https://your-alp-agent.fly.dev`.
 
 ```bash
 curl https://your-agent.railway.app/health
-# → {"status": "ok", "alp_version": "0.4.0"}
+# → {"status": "ok", "alp_version": "0.9.0"}
 
 curl https://your-agent.railway.app/agent
 # → the full Agent Card JSON

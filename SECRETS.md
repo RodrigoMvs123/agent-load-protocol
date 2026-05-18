@@ -46,14 +46,12 @@ cp .env.example .env
 `.env.example` (safe to commit — no real values):
 
 ```bash
-# LLM provider keys — injected by the ALP Server, never put in the card
-OPENAI_API_KEY=
-ANTHROPIC_API_KEY=
-GOOGLE_API_KEY=
+# LLM provider key — injected by the ALP Server, never put in the card
+GEMINI_API_KEY=
 
-# Tool-specific keys — referenced via auth_ref in the card
-SERPER_API_KEY=
-GITHUB_TOKEN=
+# Render deploy credentials — used by GitHub Actions deploy workflow
+RENDER_API_KEY=
+RENDER_SERVICE_ID=
 
 # Server config
 PORT=8000
@@ -69,15 +67,14 @@ AGENT_CARD_PATH=examples/hello-agent/agent.alp.json
 Set in the Railway dashboard: **Project → Settings → Variables**
 
 ```
-OPENAI_API_KEY=sk-...
-SERPER_API_KEY=abc...
+GEMINI_API_KEY=...
 AGENT_CARD_PATH=examples/hello-agent/agent.alp.json
 ```
 
 ### Fly.io
 
 ```bash
-fly secrets set OPENAI_API_KEY=sk-... SERPER_API_KEY=abc...
+fly secrets set GEMINI_API_KEY=...
 ```
 
 ### Render
@@ -95,9 +92,13 @@ Reference them in your workflow:
 ```yaml
 - name: Deploy ALP Server
   env:
-    OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-    SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
-  run: fly deploy
+    GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+    RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+  run: |
+    curl -X POST \
+      -H "Authorization: Bearer $RENDER_API_KEY" \
+      https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys
 ```
 
 ---

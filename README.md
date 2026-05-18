@@ -99,6 +99,123 @@ Works with Claude Desktop, Claude Code, VS Code, Cursor, and Kiro — no setup r
 
 ---
 
+## Current Version: v0.9.0
+
+See [SPEC.md](SPEC.md) for the full protocol specification and [releases/](releases/) for the changelog.
+
+---
+
+## `get_agent_card` — GitHub MCP Server Integration
+
+ALP proposes a `get_agent_card` tool for the GitHub MCP Server
+([issue #2299](https://github.com/github/github-mcp-server/issues/2299))
+that reads an `agent.alp.json` from any GitHub repo and returns it as a
+parsed, schema-validated JSON object — in one tool call.
+
+**The gap it closes:**
+
+The GitHub MCP Server already has `get_file_contents`, which can read `agent.alp.json`.
+But it returns a raw base64 blob. The caller must decode, parse, and validate manually.
+`get_agent_card` returns a typed, schema-validated object directly usable by any ALP-aware runtime.
+
+**Input parameters:**
+
+| Parameter | Required | Description |
+|---|---|---|
+| `owner` | yes | Repository owner |
+| `repo` | yes | Repository name |
+| `ref` | no | Branch / tag / SHA (defaults to default branch) |
+| `path` | no | Path to card file (defaults to `agent.alp.json`) |
+| `filename` | no | Override descriptor filename — supports any JSON agent descriptor format |
+
+**`filename` parameter behavior:**
+- If `alp_version` is present in the parsed JSON → ALP schema validation runs
+- If `alp_version` is absent → validation skipped, raw parsed JSON returned
+
+| Convention | `filename` value | ALP validation |
+|---|---|---|
+| ALP (default) | `agent.alp.json` | ✅ runs |
+| AI Catalog | `agent-card.json` | skipped |
+| GitHub-native | `.github/agent.json` | skipped |
+| Custom | any `.json` path | skipped |
+
+**What it unlocks — GitHub → Kiro in one call:**
+
+```
+Developer commits agent.alp.json to any GitHub repo
+    ↓
+Kiro calls get_agent_card { owner, repo }
+    ↓
+GitHub MCP Server fetches + parses + validates the card
+    ↓
+Kiro reads persona → injects into LLM context
+Kiro reads tools[] → registers MCP-compatible endpoints
+    ↓
+Agent is live in the Kiro chat window
+```
+
+No local clone. No manual config. One tool call.
+
+---
+
+## `runtime.deploy` Block (v0.9.0)
+
+Declared in the Agent Card. Tells any MCP-compatible runtime exactly how to
+deploy the agent — what workflow to trigger and what credentials are declared.
+Secret values never appear in the card.
+
+```json
+"runtime": {
+  "deploy": {
+    "trigger": "github_actions",
+    "workflow": ".github/workflows/deploy.yml",
+    "credentials": [
+      { "ref": "GEMINI_API_KEY",    "source": "github_secrets" },
+      { "ref": "RENDER_API_KEY",    "source": "github_secrets" },
+      { "ref": "RENDER_SERVICE_ID", "source": "github_secrets" }
+    ]
+  }
+}
+```
+
+When `get_agent_card` returns this as a typed object, the runtime knows immediately —
+without parsing a blob — what workflow to trigger and what credentials are declared.
+
+---
+
+## Live Agent: `hello-agent-alp-kiro`
+
+A real ALP v0.9.0 agent built, deployed, and verified in Kiro.
+
+| | URL |
+|---|---|
+| Repository | https://github.com/RodrigoMvs123/hello-agent-alp-kiro |
+| Live Agent Card | https://hello-agent-alp-kiro.onrender.com/agent |
+| Live MCP endpoint | https://hello-agent-alp-kiro.onrender.com/mcp |
+
+All 4 tools (`greet`, `echo`, `get_agent_card`, `chat`) verified in Kiro.
+
+---
+
+## Alignment with SEP-2127 (MCP Server Cards)
+
+This proposal is directly relevant to the active MCP specification work on
+[SEP-2127](https://github.com/modelcontextprotocol/specification/issues/2127),
+which defines a standard for pre-connection server discovery via `.well-known/mcp/server-card.json`.
+
+| SEP-2127 open question | ALP v0.9.0 answer |
+|---|---|
+| Should `tools[]` be in the Server Card? | ALP `tools[]` with `endpoint`, `input_schema`, `description` — static, opt-in |
+| Dynamic vs. static primitives? | ALP proxy mode: card declares static tool shapes; ALP Server forwards calls |
+| Relationship between Server Card and Agent Card? | ALP `agent.alp.json` — identity + persona + tools + memory in one artifact, served at `/agent` |
+| Pre-connection discovery without `.well-known`? | ALP `AGENT_CARD_URL` env var — remote loading from any GitHub raw URL |
+| Who hosts the card if owner doesn't control `.well-known`? | ALP remote card mode (v0.6.0): card lives in the repo, hosted ALP Server reads it |
+
+The live reference server at **https://agent-load-protocol.onrender.com/mcp** implements all of the above
+and is loadable today in any MCP-compatible runtime.
+
+---
+
 ## Quick Start
 
 ### Option A — GitHub-native agent (automatic, recommended for new agents)
@@ -344,13 +461,8 @@ agent-load-protocol/
 │           ├── alp_server.ts        ← Node.js / TypeScript reference server
 │           └── package.json
 ├── examples/
-│   ├── hello-agent/                 ← Minimal starter card
+│   ├── hello-agent/                 ← Minimal starter card (v0.9.0)
 │   ├── github-native-agent/         ← GitHub-native pattern (v0.9.0)
-│   ├── platform-import/             ← Exported from Relevance AI / Hive
-│   ├── custom-ui/                   ← Powering a custom frontend
-│   ├── chat-window/                 ← Registered as MCP server in Claude / VS Code
-│   ├── hive-agent/                  ← Hive swarm agent example
-│   ├── relevance-ai-agent/          ← Relevance AI coding agent example
 │   └── remote-card/                 ← agent.manifest.json multi-agent example
 ├── releases/
 │   ├── v0.9.0.md

@@ -2,11 +2,11 @@ name: Validate Agent Cards
 on:
   push:
     paths:
-      - "examples/**/agent.alp.json"
+      - "**/agent.alp.json"
       - "schema/**"
   pull_request:
     paths:
-      - "examples/**/agent.alp.json"
+      - "**/agent.alp.json"
       - "schema/**"
 jobs:
   validate:
@@ -28,7 +28,7 @@ jobs:
           from jsonschema import validate, ValidationError
           with open("schema/agent.alp.schema.json") as f:
               schema = json.load(f)
-          cards = glob.glob("examples/**/agent.alp.json", recursive=True)
+          cards = glob.glob("**/agent.alp.json", recursive=True)
           errors = []
           for card_path in cards:
               with open(card_path) as f:

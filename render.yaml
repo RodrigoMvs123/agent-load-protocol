@@ -11,9 +11,9 @@ services:
         value: "10000"
       - key: AGENT_CARD_PATH
         value: examples/hello-agent/agent.alp.json
-      - key: OPENAI_API_KEY
+      - key: GEMINI_API_KEY
         sync: false          # set in Render dashboard — never commit actual values
-      - key: ANTHROPIC_API_KEY
+      - key: RENDER_API_KEY
         sync: false
-      - key: GOOGLE_API_KEY
+      - key: RENDER_SERVICE_ID
         sync: false

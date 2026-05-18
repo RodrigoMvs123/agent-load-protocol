@@ -1,6 +1,6 @@
 """
 ALP Reference Server
-Agent Load Protocol v0.6.0
+Agent Load Protocol v0.9.0
 
 Serves an agent.alp.json and its tools over HTTP.
 
@@ -79,7 +79,7 @@ import uvicorn
 # Bootstrap
 # ---------------------------------------------------------------------------
 
-app = FastAPI(title="ALP Server", version="0.6.0")
+app = FastAPI(title="ALP Server", version="0.9.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -453,7 +453,7 @@ async def mcp_post_agent(agent_id: str, request: Request):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "alp_version": "0.6.0"}
+    return {"status": "ok", "alp_version": "0.9.0"}
 
 
 @app.get("/agent")
@@ -570,7 +570,7 @@ async def execute_tool_endpoint(tool_name: str, body: ToolInput):
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    print(f"🚀 ALP Server v0.6.0 starting on http://localhost:{PORT}")
+    print(f"🚀 ALP Server v0.9.0 starting on http://localhost:{PORT}")
     print(f"   Agent card : {AGENT_CARD_URL or AGENT_CARD_PATH}")
     print(f"   Endpoints  : /agent  /agent/refresh  /persona  /tools  /agents  /health  /mcp  /.well-known/mcp-server-card")
     print(f"   Kiro MCP   : http://localhost:{PORT}/mcp")

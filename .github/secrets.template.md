@@ -9,31 +9,35 @@ Store them here as GitHub Secrets and inject at runtime.
 2. Click "New repository secret"
 3. Add the secrets below
 
-## Required secrets for the reference server
+## Required secrets for the GitHub-native agent pattern (v0.9.0)
 
 | Secret name | Description |
 |---|---|
-| `OPENAI_API_KEY` | OpenAI API key (if using GPT models) |
-| `ANTHROPIC_API_KEY` | Anthropic API key (if using Claude) |
-| `GOOGLE_API_KEY` | Google API key (if using Gemini) |
+| `GEMINI_API_KEY` | Google Gemini API key — free quota at [aistudio.google.com](https://aistudio.google.com) |
+| `RENDER_API_KEY` | Render deploy API key — found in Render dashboard → Account Settings |
+| `RENDER_SERVICE_ID` | Render service ID for this agent — found in the service URL (`srv-...`) |
 
 ## Using secrets in your server
 
-In `alp_server.py`, access them via environment variables:
+In `server.py`, access them via environment variables:
 
 ```python
 import os
-openai_key = os.environ.get("OPENAI_API_KEY")
+gemini_key = os.environ.get("GEMINI_API_KEY")
 ```
 
 In GitHub Actions, inject them like this:
 
 ```yaml
 env:
-  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+  RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
 ```
 
 ## Rule
 
 The `agent.alp.json` Agent Card is always public-safe.
 Secrets live only in the server environment — never in the card.
+
+The `runtime.deploy.credentials` block in the card lists secret **names** only — never values.

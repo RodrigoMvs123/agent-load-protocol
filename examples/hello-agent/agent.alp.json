@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/RodrigoMvs123/agent-load-protocol/main/schema/agent.alp.schema.json",
-  "alp_version": "0.4.0",
+  "alp_version": "0.9.0",
   "id": "hello-agent",
   "name": "Hello Agent",
   "description": "A minimal ALP-compatible agent. Clone this and replace the tools with your own.",
@@ -44,15 +44,37 @@
   "memory": {
     "enabled": false
   },
+  "runtime": {
+    "deploy": {
+      "trigger": "github_actions",
+      "workflow": ".github/workflows/deploy.yml",
+      "credentials": [
+        {
+          "ref": "GEMINI_API_KEY",
+          "description": "Google Gemini API key (free quota at aistudio.google.com)",
+          "source": "github_secrets"
+        },
+        {
+          "ref": "RENDER_API_KEY",
+          "description": "Render deploy API key",
+          "source": "github_secrets"
+        },
+        {
+          "ref": "RENDER_SERVICE_ID",
+          "description": "Render service ID for this agent",
+          "source": "github_secrets"
+        }
+      ]
+    }
+  },
   "server": {
-    "url": "http://localhost:8000",
-    "_live": "https://agent-load-protocol.onrender.com",
+    "url": "https://agent-load-protocol.onrender.com",
     "transport": "http"
   },
   "metadata": {
     "author": "RodrigoMvs123",
-    "version": "0.1.0",
+    "version": "0.9.0",
     "tags": ["starter", "example", "alp"],
-    "repository": "https://github.com/RodrigoMvs123/hello-agent-alp-kiro"
+    "repository": "https://github.com/RodrigoMvs123/agent-load-protocol"
   }
 }
